@@ -23,8 +23,9 @@
  *      reporting macros.
  */
 #define H5PL_MODULE
-#define H5_MY_PKG     H5PL
-#define H5_MY_PKG_ERR H5E_PLUGIN
+#define H5_MY_PKG      H5PL
+#define H5_MY_PKG_ERR  H5E_PLUGIN
+#define H5_MY_PKG_INIT YES
 
 /** \page H5PL_UG HDF5 Plugins
  *
@@ -253,7 +254,7 @@
  * <li>3. An HDF5 filter should return zero in the case of failure.</li></ul>
  *
  * The signature of the HDF5 filter function and the accompanying filter structure (see the section below)
- * are described in the HDF5 Reference Manual #H5Z_filter_t.
+ * are described in the \ref RM #H5Z_filter_t.
  *
  * \subsubsection subsubsec_filter_plugins_prog_reg Registering a Filter with The HDF Group
  * If you are writing a filter that will be used by others, it would be a good idea to request a filter
