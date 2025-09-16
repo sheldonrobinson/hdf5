@@ -56,7 +56,7 @@ typedef struct H5G_info_t {
     H5G_storage_type_t storage_type; /**< Type of storage for links in group */
     hsize_t            nlinks;       /**< Number of links in group */
     int64_t            max_corder;   /**< Current max. creation order value for group */
-    hbool_t            mounted;      /**< Whether group has a file mounted on it */
+    bool               mounted;      /**< Whether group has a file mounted on it */
 } H5G_info_t;
 //! <!-- [H5G_info_t_snip] -->
 
@@ -838,7 +838,7 @@ H5_DLL herr_t H5Gmove2(hid_t src_loc_id, const char *src_name, hid_t dst_loc_id,
  *          the \ref UG for further details.
  *
  * \attention Exercise care in moving groups as it is possible to render data in
- *            a file inaccessible with H5Gunlink(). See The Group Interface in the
+ *            a file inaccessible with H5Gunlink(). See \ref sec_group in the
  *            \ref UG.
  *
  * \version 1.8.0 Function deprecated in this release.
@@ -1032,6 +1032,8 @@ H5_DLL int H5Gget_comment(hid_t loc_id, const char *name, size_t bufsize, char *
  * \warning  Adding or removing members to the group during iteration
  *           will lead to undefined behavior.
  *
+ * \callback_note
+ *
  * \version 1.8.0 Function deprecated in this release.
  *
  * \since 1.0.0
@@ -1119,8 +1121,7 @@ H5_DLL herr_t H5Gget_num_objs(hid_t loc_id, hsize_t *num_objs);
  * \since 1.0.0
  *
  */
-H5_DLL herr_t H5Gget_objinfo(hid_t loc_id, const char *name, hbool_t follow_link,
-                             H5G_stat_t *statbuf /*out*/);
+H5_DLL herr_t H5Gget_objinfo(hid_t loc_id, const char *name, bool follow_link, H5G_stat_t *statbuf /*out*/);
 /**
  *-------------------------------------------------------------------------
  * \ingroup H5G

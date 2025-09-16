@@ -5,21 +5,21 @@ ALIASES += THG="The HDF Group"
 ################################################################################
 # Default URL for HDF Group Files
 ALIASES += HDFURL="support.hdfgroup.org"
-# URL for archived files
-ALIASES += ARCURL="\HDFURL/archive/support/HDF5/doc"
+# URL for archived files - not currently used as all docs referenced are in doxygen
+# ALIASES += ARCURL="\HDFURL/archive/support/HDF5/doc"
+# URL for release files
+ALIASES += RELURL="\HDFURL/releases/hdf5"
 # URL for documentation
-ALIASES += DOCURL="\HDFURL/releases/hdf5/documentation"
+ALIASES += DOCURL="\RELURL/documentation"
 # URL for downloads
-ALIASES += DWNURL="\HDFURL/releases/hdf5/downloads"
+ALIASES += DWNURL="\RELURL/downloads/latest"
 # URL for RFCs
 ALIASES += RFCURL="\DOCURL/rfc"
 ALIASES += AEXURL="\HDFURL/archive/support/ftp/HDF5/examples"
-# doxygen subdir (develop, v1_14)
-ALIASES += DOXURL="hdfgroup.github.io/hdf5/develop"
 #branch name (develop, hdf5_1_14)
 ALIASES += SRCURL="github.com/HDFGroup/hdf5/blob/develop"
 #Other projects that contribute to HDF5
-ALIASES += PRJURL="\HDFURL/projects"
+ALIASES += PRJURL="\HDFURL/archive/support/projects"
 ALIASES += HVURL="github.com/HDFGroup/hdfview/blob/master"
 ALIASES += PLURL="github.com/HDFGroup/hdf5_plugins/blob/master"
 ################################################################################
@@ -68,6 +68,8 @@ ALIASES += op_data{1}="\param[in,out] \1 User-defined callback function context"
 
 ALIASES += op_data_in="\param[in] op_data User-defined callback function context"
 ALIASES += op_data_in{1}="\param[in] \1 User-defined callback function context"
+
+ALIASES += vol_only_api="This routine is exclusively for authors of HDF5 VOL connectors. It is not part of the public HDF5 APIs for HDF5 application developers."
 
 ################################################################################
 # Asynchronous
@@ -248,23 +250,25 @@ ALIASES += es_id{1}="\param[in] \1 Event set identifier"
 # Others
 ################################################################################
 
-ALIASES += cpp_c_api_note="\attention \Bold{C++ Developers using HDF5 C-API functions beware:}\n Several functions in this C-API take function pointers or callbacks as arguments. Examples include H5Pset_elink_cb(), H5Pset_type_conv_cb(), H5Tconvert(), and H5Ewalk2(). Application code must ensure that those callback functions return normally such to allow the HDF5 to manage its resources and maintain a consistent state. For instance, those functions must not use the C \c setjmp / \c longjmp mechanism to leave those callback functions. Within the context of C++, any exceptions thrown within the callback function must be caught, such as with a \TText{catch(…)} statement. Any exception state can be placed within the provided user data function call arguments, and may be thrown again once the calling function has returned. Exceptions raised and not handled inside the callback are not supported as it might leave the HDF5 library in an inconsistent state. Similarly, using C++20 coroutines cannot be used as callbacks, since they do not support plain return statements. If a callback function yields execution to another C++20 coroutine calling HDF5 functions as well, this may lead to undefined behavior."
+ALIASES += cpp_c_api_note="\anchor cpp_c_api_note \attention \Bold{C++ Developers using HDF5 C-API functions beware:}\n Several functions in this C-API take function pointers or callbacks as arguments. Examples include H5Pset_elink_cb(), H5Pset_type_conv_cb(), H5Tconvert(), and H5Ewalk2(). Application code must ensure that those callback functions return normally such to allow the HDF5 to manage its resources and maintain a consistent state. For instance, those functions must not use the C \c setjmp / \c longjmp mechanism to leave those callback functions. Within the context of C++, any exceptions thrown within the callback function must be caught, such as with a \TText{catch(…)} statement. Any exception state can be placed within the provided user data function call arguments, and may be thrown again once the calling function has returned. Exceptions raised and not handled inside the callback are not supported as it might leave the HDF5 library in an inconsistent state. Similarly, using C++20 coroutines cannot be used as callbacks, since they do not support plain return statements. If a callback function yields execution to another C++20 coroutine calling HDF5 functions as well, this may lead to undefined behavior."
+ALIASES += callback_note="\attention \Bold{Leaving callback functions:}\n The callback function must return normally, even in the case of error.  Returning with H5_ITER_ERROR, instead of leaving by means of exceptions, exit() function, etc... will allow the HDF5 library to manage its resources and maintain a consistent state. See \ref cpp_c_api_note \"C++ Developers using HDF5 C-API functions\" warning for detail."
 ALIASES += par_compr_note="\attention If you are planning to use compression with parallel HDF5, ensure that calls to H5Dwrite() occur in collective mode. In other words, all MPI ranks (in the relevant communicator) call H5Dwrite() and pass a dataset transfer property list with the MPI-IO collective option property set to #H5FD_MPIO_COLLECTIVE_IO.\n Note that data transformations are currently \Bold{not} supported when writing to datasets in parallel and with compression enabled."
 ALIASES += sa_metadata_ops="\sa \li H5Pget_all_coll_metadata_ops() \li H5Pget_coll_metadata_write() \li H5Pset_all_coll_metadata_ops() \li H5Pset_coll_metadata_write() \li \ref maybe_metadata_reads"
+ALIASES += unicode_filename_note="\note On Windows, HDF5 assumes that a file name string is UTF-8 encoded and will attempt to convert it to UTF-16 before calling wide-character Windows API functions. If a file name string cannot be converted to UTF-16, the equivalent non-wide-character Windows API functions will be used, causing a file name string to be interpreted according to the active Windows code page. If an application desires that the active Windows code page be preferred, the environment variable #HDF5_PREFER_WINDOWS_CODE_PAGE can be set to the value '1' or 'TRUE' (case-insensitive)."
+
+################################################################################
+# Specifications
+################################################################################
+
+ALIASES += ref_spec_fileformat="\ref FMT4"
+ALIASES += ref_spec_fileformat_btrees_v1="\ref subsubsec_fmt3_infra_btrees_v1"
 
 ################################################################################
 # References
 ################################################################################
 
 ALIASES += ref_cons_semantics="<a href=\"https://\RFCURL/RFC%20PHDF5%20Consistency%20Semantics%20MC%20120328.docx.pdf\">Enabling a Strict Consistency Semantics Model in Parallel HDF5</a>"
-ALIASES += ref_file_image_ops="<a href=\"https://\RFCURL/HDF5FileImageOperations.pdf\">HDF5 File Image Operations</a>"
 ALIASES += ref_filter_pipe="<a href=\"https://\DOCURL/advanced_topics/data_flow_pline_H5Dread.md\">Data Flow Pipeline for H5Dread()</a>"
-ALIASES += ref_group_impls="<a href=\"https://\DOXURL/group___h5_g.html\">Group implementations in HDF5</a>"
-ALIASES += ref_h5lib_relver="<a href=\"https://\ARCURL/TechNotes/Version.html\">HDF5 Library Release Version Numbers</a>"
-ALIASES += ref_mdc_in_hdf5="<a href=\"https://\DOCURL/advanced_topics/FineTuningMetadataCache.md\">Metadata Caching in HDF5</a>"
-ALIASES += ref_mdc_logging="<a href=\"https://\RFCURL/Design-MetadataCache-Logging-THG20140224-v4.pdf\">Metadata Cache Logging</a>"
-ALIASES += ref_news_112="<a href=\"https://\DOCURL/release_specifics/new_features_1_12.md\">New Features in HDF5 Release 1.12</a>"
-ALIASES += ref_h5ocopy="<a href=\"https://\DOCURL/advanced_topics/CopyingCommittedDatatypesWithH5Ocopy.pdf\">Copying Committed Datatypes with H5Ocopy()</a>"
 ALIASES += ref_sencode_fmt_change="<a href=\"https://\RFCURL/H5Sencode_format.docx.pdf\">RFC H5Sencode() / H5Sdecode() Format Change</a>"
 ALIASES += ref_vlen_strings="\Emph{Creating variable-length string datatypes}"
 ALIASES += ref_vol_doc="VOL documentation"
@@ -273,6 +277,7 @@ ALIASES += ref_vol_doc="VOL documentation"
 # RFCs
 ################################################################################
 
+ALIASES += ref_rfc20240129="<a href=\"https://\RFCURL/RFC__Adding_support_for_16_bit_floating_point_and_Complex_number_datatypes_to_HDF5.pdf\">Adding support for 16-bit floating point and Complex number datatypes to HDF</a>"
 ALIASES += ref_rfc20220819="<a href=\"https://\RFCURL/Terminal_VOL_Connector_Feature_Flags.pdf\">Terminal VOL Connector Feature Flags</a>"
 ALIASES += ref_rfc20210528="<a href=\"https://\RFCURL/RFC_multi_thread.pdf\">Multi-Thread HDF5</a>"
 ALIASES += ref_rfc20210219="<a href=\"https://\RFCURL/selection_io_RFC_210610.pdf\">Selection I/O</a>"
@@ -324,7 +329,6 @@ ALIASES += ref_rfc20121114="<a href=\"https://\RFCURL/DECTRIS%20Integration%20RF
 ALIASES += ref_rfc20121024="<a href=\"https://\RFCURL/FileSpaceManagement.pdf\">HDF5 File Space Management</a>"
 ALIASES += ref_rfc20120828="<a href=\"https://\RFCURL/H5HPC_MultiDset_RW_IO_RFC.pdf\">New HDF5 API Routines for HPC Applications - Read/Write Multiple Datasets in an HDF5 file</a>"
 ALIASES += ref_rfc20120523="<a href=\"https://\RFCURL/paged_aggregation.pdf\">HDF5 File Space Management: Paged Aggregation</a>"
-ALIASES += ref_rfc20120501="<a href=\"https://\RFCURL/HDF5FileImageOperations.pdf\">HDF5 File Image Operations</a>"
 ALIASES += ref_rfc20120305="<a href=\"https://\RFCURL/RFC%20PHDF5%20Consistency%20Semantics%20MC%20120328.docx.pdf\">Enabling a Strict Consistency Semantics Model in Parallel HDF5</a>"
 ALIASES += ref_rfc20120220="<a href=\"https://\RFCURL/h5repack_improve_hyperslab_over_chunked_dataset_v1.pdf\"><tt>h5repack</tt>: Improved Hyperslab selections for Large Chunked Datasets</a>"
 ALIASES += ref_rfc20120120="<a href=\"https://\RFCURL/2012-1-25-Maintainers-guide-for-datatype.docx.pdf\">A Maintainer's Guide for the Datatype Module in HDF5 Library</a>"
@@ -337,6 +341,7 @@ ALIASES += ref_rfc20110614="<a href=\"https://\RFCURL/RFC_h5dump_refactor_v3.doc
 ALIASES += ref_rfc20110329="<a href=\"https://\RFCURL/RFC_Tools_Extlink_Cache_v3_r2.docx.pdf\">Support External Link Open File Cache in HDF5 Tools</a>"
 ALIASES += ref_rfc20110118="<a href=\"https://\RFCURL/RFC%20for%20h5diff%20Attribute%20Comparisons_v7.docx.pdf\"><tt>h5diff</tt> Attribute Comparisons</a>"
 ALIASES += ref_rfc20101122="<a href=\"https://\RFCURL/RFC_swmr_timeouts_v2.docx.pdf\">SWMR Timeouts</a>"
+ALIASES += ref_rfc20101119="<a href=\"https://\RFCURL/2010-11_FUSEPerformanceReport-final.pdf\">FUSE Performance Report</a>"
 ALIASES += ref_rfc20101104="<a href=\"https://\RFCURL/CacheExternalLinkFileOpens.pdf\">Caching Files Opened Through External Links</a>"
 ALIASES += ref_rfc20101018="<a href=\"https://\RFCURL/HDF5-comparisons_v3-RFC-2011-08-03.pdf\">HDF5 File and Object Comparison Specification</a>"
 ALIASES += ref_rfc20100902="<a href=\"https://\RFCURL/H5edit-RFC-Draft-v5.pdf\"><tt>h5edit</tt> – An HDF5 File Editing Tool</a>"

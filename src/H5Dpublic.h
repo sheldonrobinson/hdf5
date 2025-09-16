@@ -28,9 +28,7 @@
 #define H5D_CHUNK_CACHE_NBYTES_DEFAULT SIZE_MAX
 #define H5D_CHUNK_CACHE_W0_DEFAULT     (-1.0)
 
-/**
- * Bit flags for the H5Pset_chunk_opts() and H5Pget_chunk_opts()
- */
+/** Bit flags for the H5Pset/get_chunk_opts() \since 1.10.0 */
 #define H5D_CHUNK_DONT_FILTER_PARTIAL_CHUNKS (0x0002u)
 
 /*******************/
@@ -242,6 +240,8 @@ typedef herr_t (*H5D_gather_func_t)(const void *dst_buf, size_t dst_buf_bytes_us
  *              immediately return that value, indicating short-circuit success.
  *          \li A negative (#H5_ITER_ERROR) causes the iterator to immediately
  *              return that value, indicating failure.
+ *
+ * \callback_note
  *
  * \since 1.14.0
  *
@@ -732,6 +732,8 @@ H5_DLL herr_t H5Dget_chunk_info_by_coord(hid_t dset_id, const hsize_t *offset, u
  * Iterate over all chunked datasets and chunks in a file.
  * \snippet H5D_examples.c H5Ovisit_cb
  *
+ * \callback_note
+ *
  * \since 1.14.0
  *
  */
@@ -1219,14 +1221,14 @@ H5_DLL herr_t H5Dwrite_multi_async(size_t count, hid_t dset_id[], hid_t mem_type
  *          \p buf is the memory buffer containing data to be written to
  *          the chunk in the file.
  *
- * \attention Exercise caution when using H5Dread_chunk() and
+ * \attention Exercise caution when using H5Dread_chunk2() and
  *          H5Dwrite_chunk(), as they read and write data chunks directly
  *          in a file. H5Dwrite_chunk() bypasses hyperslab selection, the
  *          conversion of data from one datatype to another, and the filter
  *          pipeline to write the chunk. Developers should have experience
  *          with these processes before using this function.
  *
- * \note    H5Dread_chunk() and H5Dwrite_chunk() are currently not supported
+ * \note    H5Dread_chunk2() and H5Dwrite_chunk() are currently not supported
  *          with parallel HDF5 and do not support variable-length types.
  *
  * \since 1.10.2
@@ -1248,10 +1250,11 @@ H5_DLL herr_t H5Dwrite_chunk(hid_t dset_id, hid_t dxpl_id, uint32_t filters, con
  *                      dataspace
  * \param[in,out]  filters  Mask for identifying the filters in use
  * \param[out]  buf     Buffer containing data to be read from the chunk
+ * \param[in,out]  buf_size   Size of buf in bytes
  *
  * \return \herr_t
  *
- * \details H5Dread_chunk() reads a raw data chunk as specified by
+ * \details H5Dread_chunk2() reads a raw data chunk as specified by
  *          its logical offset \p offset in a chunked dataset \p dset_id
  *          from the dataset in the file into the application memory
  *          buffer \p buf. The data in \p buf is read directly from the
@@ -1274,22 +1277,31 @@ H5_DLL herr_t H5Dwrite_chunk(hid_t dset_id, hid_t dxpl_id, uint32_t filters, con
  *          \p buf is the memory buffer containing the chunk read from
  *          the dataset in the file.
  *
- * \attention Exercise caution when using H5Dread_chunk() and
+ *          \p buf_size must be passed as a pointer to a variable holding the
+ *          allocated size, in bytes, of the memory buffer \p buf. On exit,
+ *          \p *buf_size is set to the buffer size needed to read the chunk, which
+ *          is the same as the size of the chunk on disk. If the value of
+ *          \p *buf_size passed in was insufficient to read the entire, chunk, no
+ *          data is read. \p buf may be passed as NULL as long as \p *buf_size
+ *          is 0. \p filters is always set by this function even if the chunk
+ *          was not read.
+ *
+ * \attention Exercise caution when using H5Dread_chunk2() and
  *          H5Dwrite_chunk(), as they read and write data chunks directly
  *          in a file. H5Dwrite_chunk() bypasses hyperslab selection, the
  *          conversion of data from one datatype to another, and the filter
  *          pipeline to write the chunk. Developers should have experience
  *          with these processes before using this function. Please see
- *          Using the Direct Chunk Write Function for more information.
+ *          \ref subsec_hldo_direct_chunk_using for more information.
  *
- * \note H5Dread_chunk() and H5Dwrite_chunk() are currently not supported
+ * \note H5Dread_chunk2() and H5Dwrite_chunk() are currently not supported
  *       with parallel HDF5 and do not support variable-length datatypes.
  *
- * \since 1.10.2
+ * \since 2.0.0
  *
  */
-H5_DLL herr_t H5Dread_chunk(hid_t dset_id, hid_t dxpl_id, const hsize_t *offset, uint32_t *filters,
-                            void *buf);
+H5_DLL herr_t H5Dread_chunk2(hid_t dset_id, hid_t dxpl_id, const hsize_t *offset, uint32_t *filters,
+                             void *buf, size_t *buf_size);
 
 /**
  * --------------------------------------------------------------------------
@@ -1319,6 +1331,8 @@ H5_DLL herr_t H5Dread_chunk(hid_t dset_id, hid_t dxpl_id, const hsize_t *offset,
  *
  * \warning   Modifying the selection of \p space_id during iteration
  *            will lead to undefined behavior.
+ *
+ * \callback_note
  *
  * \since 1.10.2
  *
@@ -1608,6 +1622,8 @@ H5_DLL herr_t H5Dscatter(H5D_scatter_func_t op, void *op_data, hid_t type_id, hi
  *          in \p dst_buf. The callback function should return zero (0)
  *          to indicate success, and a negative value to indicate failure.
  *
+ * \callback_note
+ *
  * \since 1.10.2
  *
  */
@@ -1689,7 +1705,7 @@ H5_DLL herr_t H5Dget_chunk_index_type(hid_t did, H5D_chunk_index_t *idx_type);
  */
 #ifndef H5_NO_DEPRECATED_SYMBOLS
 
-/* Macros */
+/** v1 B-tree index \since 1.10.0 */
 #define H5D_CHUNK_BTREE H5D_CHUNK_IDX_BTREE
 
 /* Formerly used to support the H5DOread/write_chunk() API calls.
@@ -1884,6 +1900,75 @@ H5_DLL herr_t H5Dextend(hid_t dset_id, const hsize_t size[]);
  *
  */
 H5_DLL herr_t H5Dvlen_reclaim(hid_t type_id, hid_t space_id, hid_t dxpl_id, void *buf);
+/**
+ * --------------------------------------------------------------------------
+ * \ingroup H5D
+ *
+ * \brief Reads a raw data chunk directly from a dataset in a file into
+ * a buffer
+ *
+ * \dset_id
+ * \dxpl_id
+ * \param[in]  offset   Logical position of the chunk's first element in the
+ *                      dataspace
+ * \param[in,out]  filters  Mask for identifying the filters in use
+ * \param[out]  buf     Buffer containing data to be read from the chunk
+ *
+ * \return \herr_t
+ *
+ * \deprecation_note{H5Dread_chunk2() or the macro H5Dread_chunk()}
+ *
+ * \details H5Dread_chunk1() reads a raw data chunk as specified by
+ *          its logical offset \p offset in a chunked dataset \p dset_id
+ *          from the dataset in the file into the application memory
+ *          buffer \p buf. The data in \p buf is read directly from the
+ *          file bypassing the library's internal data transfer pipeline,
+ *          including filters.
+ *
+ *          \p offset is an array specifying the logical position of the
+ *          first element of the chunk in the dataset's dataspace. The
+ *          length of the \p offset array must equal the number of dimensions,
+ *          or rank, of the dataspace. The values in \p offset must not exceed
+ *          the dimension limits and must specify a point that falls on
+ *          a dataset chunk boundary.
+ *
+ *          The mask \p filters indicates which filters were used when the
+ *          chunk was written. A zero value (all bits 0) indicates that all
+ *          enabled filters are applied on the chunk. A filter is skipped if
+ *          the bit corresponding to the filter's position in the pipeline
+ *          (0 ≤ position < 32) is turned on.
+ *
+ *          \p buf is the memory buffer containing the chunk read from
+ *          the dataset in the file.
+ *
+ * \attention It is strongly recommended to use H5Dread_chunk2() instead of this
+ *          function due to the potential for memory corruption. During the
+ *          typical usage pattern of this function, the application has no way
+ *          of knowing the size of the chunk on disk, or even a maximum size
+ *          (filters can increase the size of a chunk). The library also has no
+ *          way of knowing the size of \p buf, so there is a potential for the
+ *          library to write past the end of the buffer. The only general way to
+ *          avoid this problem, besides upgrading to H5Dread_chunk2(), is to
+ *          query the chunk size beforehand, which can be expensive.
+ *
+ * \attention Exercise caution when using H5Dread_chunk1() and
+ *          H5Dwrite_chunk(), as they read and write data chunks directly
+ *          in a file. H5Dwrite_chunk() bypasses hyperslab selection, the
+ *          conversion of data from one datatype to another, and the filter
+ *          pipeline to write the chunk. Developers should have experience
+ *          with these processes before using this function. Please see
+ *          \ref subsec_hldo_direct_chunk_using for more information.
+ *
+ * \note H5Dread_chunk1() and H5Dwrite_chunk() are currently not supported
+ *       with parallel HDF5 and do not support variable-length datatypes.
+ *
+ * \version 2.0.0 Function was deprecated
+ *
+ * \since 1.10.2
+ *
+ */
+H5_DLL herr_t H5Dread_chunk1(hid_t dset_id, hid_t dxpl_id, const hsize_t *offset, uint32_t *filters,
+                             void *buf);
 
 #endif /* H5_NO_DEPRECATED_SYMBOLS */
 

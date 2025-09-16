@@ -263,7 +263,7 @@ tts_rec_rwlock_smoke_check_test_thread(void *_udata)
  **********************************************************************
  */
 void
-tts_rec_rwlock_smoke_check_1(const void H5_ATTR_UNUSED *params)
+tts_rec_rwlock_smoke_check_1(void H5_ATTR_UNUSED *params)
 {
     herr_t result;
 #if H5TS_ENABLE_REC_RWLOCK_STATS
@@ -546,7 +546,7 @@ tts_rec_rwlock_smoke_check_1(const void H5_ATTR_UNUSED *params)
  **********************************************************************
  */
 void
-tts_rec_rwlock_smoke_check_2(const void H5_ATTR_UNUSED *params)
+tts_rec_rwlock_smoke_check_2(void H5_ATTR_UNUSED *params)
 {
     herr_t                   result;
     int                      express_test;
@@ -582,15 +582,15 @@ tts_rec_rwlock_smoke_check_2(const void H5_ATTR_UNUSED *params)
 
     /* Reduce # of threads and test cycles for higher levels of express testing */
     express_test = GetTestExpress();
-    if (express_test >= 1) {
+    if (express_test >= H5_TEST_EXPRESS_FULL) {
         num_threads /= 2;
         lock_cycles /= 10;
     }
-    if (express_test >= 2) {
+    if (express_test >= H5_TEST_EXPRESS_QUICK) {
         num_threads /= 2;
         lock_cycles /= 10;
     }
-    if (express_test >= 3) {
+    if (express_test >= H5_TEST_EXPRESS_SMOKE_TEST) {
         num_threads /= 2;
         lock_cycles /= 10;
     }
@@ -752,7 +752,7 @@ tts_rec_rwlock_smoke_check_2(const void H5_ATTR_UNUSED *params)
  **********************************************************************
  */
 void
-tts_rec_rwlock_smoke_check_3(const void H5_ATTR_UNUSED *params)
+tts_rec_rwlock_smoke_check_3(void H5_ATTR_UNUSED *params)
 {
     herr_t                   result;
     int                      i;
@@ -788,15 +788,15 @@ tts_rec_rwlock_smoke_check_3(const void H5_ATTR_UNUSED *params)
 
     /* Reduce # of threads and test cycles for higher levels of express testing */
     express_test = GetTestExpress();
-    if (express_test >= 1) {
+    if (express_test >= H5_TEST_EXPRESS_FULL) {
         num_threads /= 2;
         lock_cycles /= 10;
     }
-    if (express_test >= 2) {
+    if (express_test >= H5_TEST_EXPRESS_QUICK) {
         num_threads /= 2;
         lock_cycles /= 10;
     }
-    if (express_test >= 3) {
+    if (express_test >= H5_TEST_EXPRESS_SMOKE_TEST) {
         num_threads /= 2;
         lock_cycles /= 10;
     }
@@ -958,7 +958,7 @@ tts_rec_rwlock_smoke_check_3(const void H5_ATTR_UNUSED *params)
  **********************************************************************
  */
 void
-tts_rec_rwlock_smoke_check_4(const void H5_ATTR_UNUSED *params)
+tts_rec_rwlock_smoke_check_4(void H5_ATTR_UNUSED *params)
 {
     herr_t                   result;
     int                      i;
@@ -994,15 +994,15 @@ tts_rec_rwlock_smoke_check_4(const void H5_ATTR_UNUSED *params)
 
     /* Reduce # of threads and test cycles for higher levels of express testing */
     express_test = GetTestExpress();
-    if (express_test >= 1) {
+    if (express_test >= H5_TEST_EXPRESS_FULL) {
         num_threads /= 2;
         lock_cycles /= 10;
     }
-    if (express_test >= 2) {
+    if (express_test >= H5_TEST_EXPRESS_QUICK) {
         num_threads /= 2;
         lock_cycles /= 10;
     }
-    if (express_test >= 3) {
+    if (express_test >= H5_TEST_EXPRESS_SMOKE_TEST) {
         num_threads /= 2;
         lock_cycles /= 10;
     }

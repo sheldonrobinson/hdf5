@@ -28,6 +28,9 @@
 
 /** \page H5P_UG  Properties and Property Lists in HDF5
  *
+ * Navigate back: \ref index "Main" / \ref UG
+ * <hr>
+ *
  * \section sec_plist Properties and Property Lists in HDF5
  *
  * HDF5 property lists are the main vehicle to configure the
@@ -816,7 +819,7 @@
  *
  * The in-memory file image feature of HDF5 uses property lists in a manner that differs
  * substantially from their use elsewhere in HDF5. Those who plan to use in-memory file images
- * must study "File Image Operations" (PDF) in the Advanced Topics in HDF5collection.
+ * must study \ref H5FIM_UG.
  *
  * \subsection subsec_plist_notes Notes
  *
@@ -879,6 +882,11 @@
  *
  * Previous Chapter \ref sec_error - Next Chapter \ref sec_vol
  *
+ * <hr>
+ * Navigate back: \ref index "Main" / \ref UG
+ */
+
+/**
  * \defgroup H5P Property Lists (H5P)
  *
  * Use the functions in this module to manage HDF5 property lists and property
@@ -1051,7 +1059,7 @@
  * created.
  * <div>
  * \snippet{doc} tables/propertyLists.dox fcpl_table
-  * </div>
+ * </div>
  *
  * \defgroup GAPL Group Access Properties
  * \ingroup LAPL
@@ -1113,6 +1121,10 @@
  * \ingroup LAPL
  * TAPL isn't supported yet.
  *
+ *
+ * \defgroup MAPL VOL Data Mapping Properties
+ * \ingroup H5P
+ * Empty property class.
  *
  *
  */

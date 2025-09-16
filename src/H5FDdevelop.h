@@ -92,41 +92,49 @@
 /**
  * Extensible array header block; it is mapped to 'ohdr' type file memory to
  * benefit from their similarity.
+ * \since 1.10.0
  */
 #define H5FD_MEM_EARRAY_HDR H5FD_MEM_OHDR
 /**
  * Extensible array index block; it is mapped to 'ohdr' type file memory because
  * these index blocks are similar to extensible array header blocks.
+ * \since 1.10.0
  */
 #define H5FD_MEM_EARRAY_IBLOCK H5FD_MEM_OHDR
 /**
  * Extensible array super block; it is mappend to 'btree' type file memory
  * because the indices are similar enough to B-tree nodes.
+ * \since 1.10.0
  */
 #define H5FD_MEM_EARRAY_SBLOCK H5FD_MEM_BTREE
 /**
  * Extensible array data block; it is mapped to 'lheap' type file memory
  * because it is similar enough to local heap info.
+ * \since 1.10.0
  */
 #define H5FD_MEM_EARRAY_DBLOCK H5FD_MEM_LHEAP
 /**
  * Extensible array data block & page; it is mapped to 'lheap' type file memory
  * because it is similar enough to local heap info.
+ * \since 1.10.0
  */
 #define H5FD_MEM_EARRAY_DBLK_PAGE H5FD_MEM_LHEAP
 /**
  * Fixed array header block; it is mapped to 'ohdr' type file memory to
  * benefit their similarity.
+ * \since 1.10.0
  */
 #define H5FD_MEM_FARRAY_HDR H5FD_MEM_OHDR
 /**
  * Fixed array data block; it is mapped to 'lheap' type file memory
  * because it is similar enough to local heap info.
+ * \since 1.10.0
  */
 #define H5FD_MEM_FARRAY_DBLOCK H5FD_MEM_LHEAP
 /**
  * Fixed array data block & page; it is mapped to 'lheap' type file memory
  * because it is similar enough to local heap info.
+ * \since 1.10.0
  */
 #define H5FD_MEM_FARRAY_DBLK_PAGE H5FD_MEM_LHEAP
 
@@ -294,13 +302,13 @@ typedef struct H5FD_class_t {
                               const void *bufs[] /*in*/);
     /**< */
 
-    herr_t (*flush)(H5FD_t *file, hid_t dxpl_id, hbool_t closing);
+    herr_t (*flush)(H5FD_t *file, hid_t dxpl_id, bool closing);
     /**< Flushes all data to disk */
 
-    herr_t (*truncate)(H5FD_t *file, hid_t dxpl_id, hbool_t closing);
+    herr_t (*truncate)(H5FD_t *file, hid_t dxpl_id, bool closing);
     /**< Truncates a file */
 
-    herr_t (*lock)(H5FD_t *file, hbool_t rw);
+    herr_t (*lock)(H5FD_t *file, bool rw);
     /**< Places an advisory lock on a file */
 
     herr_t (*unlock)(H5FD_t *file);
@@ -341,7 +349,7 @@ struct H5FD_t {
     /* Space allocation management fields */
     hsize_t threshold;  /**< Threshold for alignment  */
     hsize_t alignment;  /**< Allocation alignment     */
-    hbool_t paged_aggr; /**< Paged aggregation for file space is enabled or not */
+    bool    paged_aggr; /**< Paged aggregation for file space is enabled or not */
 };
 
 /* VFD initialization function */
@@ -399,9 +407,9 @@ H5_DLL herr_t  H5FDread_from_selection(H5FD_t *file, H5FD_mem_t type, hid_t dxpl
 H5_DLL herr_t  H5FDwrite_from_selection(H5FD_t *file, H5FD_mem_t type, hid_t dxpl_id, uint32_t count,
                                         hid_t mem_space_ids[], hid_t file_space_ids[], haddr_t offsets[],
                                         size_t element_sizes[], const void *bufs[] /* in */);
-H5_DLL herr_t  H5FDflush(H5FD_t *file, hid_t dxpl_id, hbool_t closing);
-H5_DLL herr_t  H5FDtruncate(H5FD_t *file, hid_t dxpl_id, hbool_t closing);
-H5_DLL herr_t  H5FDlock(H5FD_t *file, hbool_t rw);
+H5_DLL herr_t  H5FDflush(H5FD_t *file, hid_t dxpl_id, bool closing);
+H5_DLL herr_t  H5FDtruncate(H5FD_t *file, hid_t dxpl_id, bool closing);
+H5_DLL herr_t  H5FDlock(H5FD_t *file, bool rw);
 H5_DLL herr_t  H5FDunlock(H5FD_t *file);
 H5_DLL herr_t  H5FDdelete(const char *name, hid_t fapl_id);
 H5_DLL herr_t  H5FDctl(H5FD_t *file, uint64_t op_code, uint64_t flags, const void *input, void **output);

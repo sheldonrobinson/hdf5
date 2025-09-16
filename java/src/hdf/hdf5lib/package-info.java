@@ -11,7 +11,7 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 /**
- @page HDF5LIB_UG HDF5 Java Package
+ \page HDF5LIB_UG HDF5 Java Package
  * This package is the Java interface for the HDF5 library.
  * <p>
  * This code is the called by Java programs to access the entry points of the HDF5 library.
@@ -19,7 +19,7 @@
  * HDF5 entry point, generally with the arguments and return codes analogous to the C interface.
  * <p>
  * For details of the HDF5 library, see the HDF5 Documentation at:
- *     <a href="http://hdfgroup.org/HDF5/">http://hdfgroup.org/HDF5/</a>
+ *     <a href="https://support.hdfgroup.org/documentation/">https://support.hdfgroup.org/documentation/</a>
  * <hr>
  * <p>
  * <b>Mapping of arguments for Java</b>
@@ -196,7 +196,7 @@
  *
  * @ref HDF5LIB
  *
- * <b>@see: <a href="http://hdfgroup.org/HDF5/"> HDF5"</a></b>
+ * <b>@see: <a href="https://www.hdfgroup.org/solutions/hdf5/">HDF5"</a></b>
  *
  */
 package hdf.hdf5lib;

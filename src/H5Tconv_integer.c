@@ -201,12 +201,18 @@ H5T__conv_i_i(const H5T_t *src, const H5T_t *dst, H5T_cdata_t *cdata, const H5T_
                         /*overflow*/
                         if (conv_ctx->u.conv.cb_struct
                                 .func) { /*If user's exception handler is present, use it*/
-                            /* reverse source buffer order first */
+                            /* Reverse source buffer order first */
                             H5T__reverse_order(src_rev, s, src);
-                            except_ret = (conv_ctx->u.conv.cb_struct.func)(
-                                H5T_CONV_EXCEPT_RANGE_HI, conv_ctx->u.conv.src_type_id,
-                                conv_ctx->u.conv.dst_type_id, src_rev, d,
-                                conv_ctx->u.conv.cb_struct.user_data);
+
+                            /* Prepare & restore library for user callback */
+                            H5_BEFORE_USER_CB(FAIL)
+                                {
+                                    except_ret = (conv_ctx->u.conv.cb_struct.func)(
+                                        H5T_CONV_EXCEPT_RANGE_HI, conv_ctx->u.conv.src_type_id,
+                                        conv_ctx->u.conv.dst_type_id, src_rev, d,
+                                        conv_ctx->u.conv.cb_struct.user_data);
+                                }
+                            H5_AFTER_USER_CB(FAIL)
                         }
 
                         if (except_ret == H5T_CONV_UNHANDLED) {
@@ -237,12 +243,18 @@ H5T__conv_i_i(const H5T_t *src, const H5T_t *dst, H5T_cdata_t *cdata, const H5T_
                         /*overflow - source is negative*/
                         if (conv_ctx->u.conv.cb_struct
                                 .func) { /*If user's exception handler is present, use it*/
-                            /* reverse source buffer order first */
+                            /* Reverse source buffer order first */
                             H5T__reverse_order(src_rev, s, src);
-                            except_ret = (conv_ctx->u.conv.cb_struct.func)(
-                                H5T_CONV_EXCEPT_RANGE_LOW, conv_ctx->u.conv.src_type_id,
-                                conv_ctx->u.conv.dst_type_id, src_rev, d,
-                                conv_ctx->u.conv.cb_struct.user_data);
+
+                            /* Prepare & restore library for user callback */
+                            H5_BEFORE_USER_CB(FAIL)
+                                {
+                                    except_ret = (conv_ctx->u.conv.cb_struct.func)(
+                                        H5T_CONV_EXCEPT_RANGE_LOW, conv_ctx->u.conv.src_type_id,
+                                        conv_ctx->u.conv.dst_type_id, src_rev, d,
+                                        conv_ctx->u.conv.cb_struct.user_data);
+                                }
+                            H5_AFTER_USER_CB(FAIL)
                         }
 
                         if (except_ret == H5T_CONV_UNHANDLED) {
@@ -265,12 +277,18 @@ H5T__conv_i_i(const H5T_t *src, const H5T_t *dst, H5T_cdata_t *cdata, const H5T_
                         /*overflow - source is positive*/
                         if (conv_ctx->u.conv.cb_struct
                                 .func) { /*If user's exception handler is present, use it*/
-                            /* reverse source buffer order first */
+                            /* Reverse source buffer order first */
                             H5T__reverse_order(src_rev, s, src);
-                            except_ret = (conv_ctx->u.conv.cb_struct.func)(
-                                H5T_CONV_EXCEPT_RANGE_HI, conv_ctx->u.conv.src_type_id,
-                                conv_ctx->u.conv.dst_type_id, src_rev, d,
-                                conv_ctx->u.conv.cb_struct.user_data);
+
+                            /* Prepare & restore library for user callback */
+                            H5_BEFORE_USER_CB(FAIL)
+                                {
+                                    except_ret = (conv_ctx->u.conv.cb_struct.func)(
+                                        H5T_CONV_EXCEPT_RANGE_HI, conv_ctx->u.conv.src_type_id,
+                                        conv_ctx->u.conv.dst_type_id, src_rev, d,
+                                        conv_ctx->u.conv.cb_struct.user_data);
+                                }
+                            H5_AFTER_USER_CB(FAIL)
                         }
 
                         if (except_ret == H5T_CONV_UNHANDLED)
@@ -298,12 +316,18 @@ H5T__conv_i_i(const H5T_t *src, const H5T_t *dst, H5T_cdata_t *cdata, const H5T_
                         /*overflow*/
                         if (conv_ctx->u.conv.cb_struct
                                 .func) { /*If user's exception handler is present, use it*/
-                            /* reverse source buffer order first */
+                            /* Reverse source buffer order first */
                             H5T__reverse_order(src_rev, s, src);
-                            except_ret = (conv_ctx->u.conv.cb_struct.func)(
-                                H5T_CONV_EXCEPT_RANGE_HI, conv_ctx->u.conv.src_type_id,
-                                conv_ctx->u.conv.dst_type_id, src_rev, d,
-                                conv_ctx->u.conv.cb_struct.user_data);
+
+                            /* Prepare & restore library for user callback */
+                            H5_BEFORE_USER_CB(FAIL)
+                                {
+                                    except_ret = (conv_ctx->u.conv.cb_struct.func)(
+                                        H5T_CONV_EXCEPT_RANGE_HI, conv_ctx->u.conv.src_type_id,
+                                        conv_ctx->u.conv.dst_type_id, src_rev, d,
+                                        conv_ctx->u.conv.cb_struct.user_data);
+                                }
+                            H5_AFTER_USER_CB(FAIL)
                         }
 
                         if (except_ret == H5T_CONV_UNHANDLED) {
@@ -346,12 +370,18 @@ H5T__conv_i_i(const H5T_t *src, const H5T_t *dst, H5T_cdata_t *cdata, const H5T_
                         /*overflow*/
                         if (conv_ctx->u.conv.cb_struct
                                 .func) { /*If user's exception handler is present, use it*/
-                            /* reverse source buffer order first */
+                            /* Reverse source buffer order first */
                             H5T__reverse_order(src_rev, s, src);
-                            except_ret = (conv_ctx->u.conv.cb_struct.func)(
-                                H5T_CONV_EXCEPT_RANGE_LOW, conv_ctx->u.conv.src_type_id,
-                                conv_ctx->u.conv.dst_type_id, src_rev, d,
-                                conv_ctx->u.conv.cb_struct.user_data);
+
+                            /* Prepare & restore library for user callback */
+                            H5_BEFORE_USER_CB(FAIL)
+                                {
+                                    except_ret = (conv_ctx->u.conv.cb_struct.func)(
+                                        H5T_CONV_EXCEPT_RANGE_LOW, conv_ctx->u.conv.src_type_id,
+                                        conv_ctx->u.conv.dst_type_id, src_rev, d,
+                                        conv_ctx->u.conv.cb_struct.user_data);
+                                }
+                            H5_AFTER_USER_CB(FAIL)
                         }
 
                         if (except_ret == H5T_CONV_UNHANDLED) {
@@ -389,12 +419,18 @@ H5T__conv_i_i(const H5T_t *src, const H5T_t *dst, H5T_cdata_t *cdata, const H5T_
                         /*overflow*/
                         if (conv_ctx->u.conv.cb_struct
                                 .func) { /*If user's exception handler is present, use it*/
-                            /* reverse source buffer order first */
+                            /* Reverse source buffer order first */
                             H5T__reverse_order(src_rev, s, src);
-                            except_ret = (conv_ctx->u.conv.cb_struct.func)(
-                                H5T_CONV_EXCEPT_RANGE_HI, conv_ctx->u.conv.src_type_id,
-                                conv_ctx->u.conv.dst_type_id, src_rev, d,
-                                conv_ctx->u.conv.cb_struct.user_data);
+
+                            /* Prepare & restore library for user callback */
+                            H5_BEFORE_USER_CB(FAIL)
+                                {
+                                    except_ret = (conv_ctx->u.conv.cb_struct.func)(
+                                        H5T_CONV_EXCEPT_RANGE_HI, conv_ctx->u.conv.src_type_id,
+                                        conv_ctx->u.conv.dst_type_id, src_rev, d,
+                                        conv_ctx->u.conv.cb_struct.user_data);
+                                }
+                            H5_AFTER_USER_CB(FAIL)
                         }
 
                         if (except_ret == H5T_CONV_UNHANDLED) {
@@ -687,11 +723,17 @@ H5T__conv_i_f_loop(const H5T_t *src_p, const H5T_t *dst_p, const H5T_conv_ctx_t 
              * precision loss. Let user's handler deal with the case if it's present
              */
             if (conv_ctx->u.conv.cb_struct.func) {
-                /* reverse source buffer order first */
+                /* Reverse source buffer order first */
                 H5T__reverse_order(src_rev, s, src_p);
-                except_ret = (conv_ctx->u.conv.cb_struct.func)(
-                    H5T_CONV_EXCEPT_PRECISION, conv_ctx->u.conv.src_type_id, conv_ctx->u.conv.dst_type_id,
-                    src_rev, d, conv_ctx->u.conv.cb_struct.user_data);
+
+                /* Prepare & restore library for user callback */
+                H5_BEFORE_USER_CB(FAIL)
+                    {
+                        except_ret = (conv_ctx->u.conv.cb_struct.func)(
+                            H5T_CONV_EXCEPT_PRECISION, conv_ctx->u.conv.src_type_id,
+                            conv_ctx->u.conv.dst_type_id, src_rev, d, conv_ctx->u.conv.cb_struct.user_data);
+                    }
+                H5_AFTER_USER_CB(FAIL)
             }
 
             if (except_ret == H5T_CONV_HANDLED) {
@@ -757,13 +799,19 @@ H5T__conv_i_f_loop(const H5T_t *src_p, const H5T_t *dst_p, const H5T_conv_ctx_t 
         /* Check if the exponent is too big */
         expo_max = (hsize_t)(pow(2.0, (double)dst_atomic.u.f.esize) - 1);
 
-        if (expo > expo_max) { /* overflows */
-            if (conv_ctx->u.conv.cb_struct.func) {
-                /* user's exception handler. Reverse back source order */
+        if (expo > expo_max) {                     /* overflows */
+            if (conv_ctx->u.conv.cb_struct.func) { /* user's exception handler */
+                /* Reverse back source order */
                 H5T__reverse_order(src_rev, s, src_p);
-                except_ret = (conv_ctx->u.conv.cb_struct.func)(
-                    H5T_CONV_EXCEPT_RANGE_HI, conv_ctx->u.conv.src_type_id, conv_ctx->u.conv.dst_type_id,
-                    src_rev, d, conv_ctx->u.conv.cb_struct.user_data);
+
+                /* Prepare & restore library for user callback */
+                H5_BEFORE_USER_CB(FAIL)
+                    {
+                        except_ret = (conv_ctx->u.conv.cb_struct.func)(
+                            H5T_CONV_EXCEPT_RANGE_HI, conv_ctx->u.conv.src_type_id,
+                            conv_ctx->u.conv.dst_type_id, src_rev, d, conv_ctx->u.conv.cb_struct.user_data);
+                    }
+                H5_AFTER_USER_CB(FAIL)
 
                 if (except_ret == H5T_CONV_ABORT)
                     HGOTO_ERROR(H5E_DATATYPE, H5E_CANTCONVERT, FAIL, "can't handle conversion exception");
@@ -2034,9 +2082,9 @@ H5T__conv_ushort__Float16(const H5T_t *st, const H5T_t *dt, H5T_cdata_t *cdata,
                           size_t H5_ATTR_UNUSED bkg_stride, void *buf, void H5_ATTR_UNUSED *bkg)
 {
     /* Suppress warning about non-standard floating-point literal suffix */
-    H5_GCC_CLANG_DIAG_OFF("pedantic")
+    H5_WARN_NONSTD_SUFFIX_OFF
     H5T_CONV_Xf(USHORT, FLOAT16, unsigned short, H5__Float16, -FLT16_MAX, FLT16_MAX);
-    H5_GCC_CLANG_DIAG_ON("pedantic")
+    H5_WARN_NONSTD_SUFFIX_ON
 }
 #endif
 
@@ -2322,9 +2370,9 @@ H5T__conv_int__Float16(const H5T_t *st, const H5T_t *dt, H5T_cdata_t *cdata, con
                        void H5_ATTR_UNUSED *bkg)
 {
     /* Suppress warning about non-standard floating-point literal suffix */
-    H5_GCC_CLANG_DIAG_OFF("pedantic")
+    H5_WARN_NONSTD_SUFFIX_OFF
     H5T_CONV_Xf(INT, FLOAT16, int, H5__Float16, -FLT16_MAX, FLT16_MAX);
-    H5_GCC_CLANG_DIAG_ON("pedantic")
+    H5_WARN_NONSTD_SUFFIX_ON
 }
 #endif
 
@@ -2610,9 +2658,9 @@ H5T__conv_uint__Float16(const H5T_t *st, const H5T_t *dt, H5T_cdata_t *cdata, co
                         void H5_ATTR_UNUSED *bkg)
 {
     /* Suppress warning about non-standard floating-point literal suffix */
-    H5_GCC_CLANG_DIAG_OFF("pedantic")
+    H5_WARN_NONSTD_SUFFIX_OFF
     H5T_CONV_Xf(UINT, FLOAT16, unsigned int, H5__Float16, -FLT16_MAX, FLT16_MAX);
-    H5_GCC_CLANG_DIAG_ON("pedantic")
+    H5_WARN_NONSTD_SUFFIX_ON
 }
 #endif
 
@@ -2898,9 +2946,9 @@ H5T__conv_long__Float16(const H5T_t *st, const H5T_t *dt, H5T_cdata_t *cdata, co
                         void H5_ATTR_UNUSED *bkg)
 {
     /* Suppress warning about non-standard floating-point literal suffix */
-    H5_GCC_CLANG_DIAG_OFF("pedantic")
+    H5_WARN_NONSTD_SUFFIX_OFF
     H5T_CONV_Xf(LONG, FLOAT16, long, H5__Float16, -FLT16_MAX, FLT16_MAX);
-    H5_GCC_CLANG_DIAG_ON("pedantic")
+    H5_WARN_NONSTD_SUFFIX_ON
 }
 #endif
 
@@ -3186,9 +3234,9 @@ H5T__conv_ulong__Float16(const H5T_t *st, const H5T_t *dt, H5T_cdata_t *cdata, c
                          void H5_ATTR_UNUSED *bkg)
 {
     /* Suppress warning about non-standard floating-point literal suffix */
-    H5_GCC_CLANG_DIAG_OFF("pedantic")
+    H5_WARN_NONSTD_SUFFIX_OFF
     H5T_CONV_Xf(ULONG, FLOAT16, unsigned long, H5__Float16, -FLT16_MAX, FLT16_MAX);
-    H5_GCC_CLANG_DIAG_ON("pedantic")
+    H5_WARN_NONSTD_SUFFIX_ON
 }
 #endif
 
@@ -3474,9 +3522,9 @@ H5T__conv_llong__Float16(const H5T_t *st, const H5T_t *dt, H5T_cdata_t *cdata, c
                          void H5_ATTR_UNUSED *bkg)
 {
     /* Suppress warning about non-standard floating-point literal suffix */
-    H5_GCC_CLANG_DIAG_OFF("pedantic")
+    H5_WARN_NONSTD_SUFFIX_OFF
     H5T_CONV_Xf(LLONG, FLOAT16, long long, H5__Float16, -FLT16_MAX, FLT16_MAX);
-    H5_GCC_CLANG_DIAG_ON("pedantic")
+    H5_WARN_NONSTD_SUFFIX_ON
 }
 #endif
 
@@ -3766,9 +3814,9 @@ H5T__conv_ullong__Float16(const H5T_t *st, const H5T_t *dt, H5T_cdata_t *cdata,
                           size_t H5_ATTR_UNUSED bkg_stride, void *buf, void H5_ATTR_UNUSED *bkg)
 {
     /* Suppress warning about non-standard floating-point literal suffix */
-    H5_GCC_CLANG_DIAG_OFF("pedantic")
+    H5_WARN_NONSTD_SUFFIX_OFF
     H5T_CONV_Xf(ULLONG, FLOAT16, unsigned long long, H5__Float16, -FLT16_MAX, FLT16_MAX);
-    H5_GCC_CLANG_DIAG_ON("pedantic")
+    H5_WARN_NONSTD_SUFFIX_ON
 }
 #endif
 

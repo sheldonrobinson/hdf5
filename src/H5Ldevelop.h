@@ -26,17 +26,17 @@
 /*****************/
 
 /**
- * \brief Current version of the H5L_class_t struct
+ * \brief Current version of the H5L_class_t struct \since 1.8.0
  */
 #define H5L_LINK_CLASS_T_VERS 1
 
 /**
- * \brief Version of external link format
+ * \brief Version of external link format \since 1.8.0
  */
 #define H5L_EXT_VERSION 0
 
 /**
- * \brief Valid flags for external links
+ * \brief Valid flags for external links \since 1.8.0
  */
 #define H5L_EXT_FLAGS_ALL 0
 
@@ -299,7 +299,7 @@ H5_DLL herr_t H5Lunregister(H5L_type_t id);
  */
 #ifndef H5_NO_DEPRECATED_SYMBOLS
 
-/* Previous versions of the H5L_class_t struct */
+/** Previous versions of the H5L_class_t struct \since 1.10.3 */
 #define H5L_LINK_CLASS_T_VERS_0 0
 
 /** Callback during link traversal */

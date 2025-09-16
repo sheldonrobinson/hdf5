@@ -45,24 +45,6 @@ typedef struct H5FD_mirror_t {
     uint32_t           xmit_i;  /* Counter of transmission sent and rec'd */
 } H5FD_mirror_t;
 
-/*
- * These macros check for overflow of various quantities.  These macros
- * assume that HDoff_t is signed and haddr_t and size_t are unsigned.
- *
- * ADDR_OVERFLOW:   Checks whether a file address of type `haddr_t'
- *                  is too large to be represented by the second argument
- *                  of the file seek function.
- *
- * SIZE_OVERFLOW:   Checks whether a buffer size of type `hsize_t' is too
- *                  large to be represented by the `size_t' type.
- *
- * REGION_OVERFLOW: Checks whether an address and size pair describe data
- *                  which can be addressed entirely by the second
- *                  argument of the file seek function.
- */
-#define MAXADDR          (((haddr_t)1 << (8 * sizeof(HDoff_t) - 1)) - 1)
-#define ADDR_OVERFLOW(A) (HADDR_UNDEF == (A) || ((A) & ~(haddr_t)MAXADDR))
-
 #ifndef BSWAP_64
 #define BSWAP_64(X)                                                                                          \
     (uint64_t)((((X) & 0x00000000000000FF) << 56) | (((X) & 0x000000000000FF00) << 40) |                     \
@@ -162,7 +144,7 @@ static const H5FD_class_t H5FD_mirror_g = {
     H5FD_CLASS_VERSION,     /* struct version       */
     H5FD_MIRROR_VALUE,      /* value                */
     "mirror",               /* name                 */
-    MAXADDR,                /* maxaddr              */
+    H5FD_MAXADDR,           /* maxaddr              */
     H5F_CLOSE_WEAK,         /* fc_degree            */
     NULL,                   /* terminate            */
     NULL,                   /* sb_size              */
@@ -1265,7 +1247,7 @@ H5Pget_fapl_mirror(hid_t fapl_id, H5FD_mirror_fapl_t *fa_dst /*out*/)
     if (NULL == fa_dst)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "fa_dst is NULL");
 
-    plist = H5P_object_verify(fapl_id, H5P_FILE_ACCESS);
+    plist = H5P_object_verify(fapl_id, H5P_FILE_ACCESS, true);
     if (NULL == plist)
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a file access property list");
     if (H5P_peek_driver(plist) != H5FD_MIRROR)
@@ -1302,7 +1284,7 @@ H5Pset_fapl_mirror(hid_t fapl_id, H5FD_mirror_fapl_t *fa)
 
     LOG_OP_CALL(__func__);
 
-    plist = H5P_object_verify(fapl_id, H5P_FILE_ACCESS);
+    plist = H5P_object_verify(fapl_id, H5P_FILE_ACCESS, false);
     if (NULL == plist)
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a file access property list");
     if (NULL == fa)
@@ -1358,7 +1340,7 @@ H5FD__mirror_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t maxad
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, NULL, "filename is too long");
     if (0 == maxaddr || HADDR_UNDEF == maxaddr)
         HGOTO_ERROR(H5E_ARGS, H5E_BADRANGE, NULL, "bogus maxaddr");
-    if (ADDR_OVERFLOW(maxaddr))
+    if (H5FD_ADDR_OVERFLOW(maxaddr))
         HGOTO_ERROR(H5E_ARGS, H5E_OVERFLOW, NULL, "bogus maxaddr");
 
     if (H5Pget_fapl_mirror(fapl_id, &fa) == FAIL)

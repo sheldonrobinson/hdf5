@@ -3198,7 +3198,14 @@ H5T__register(H5T_pers_t pers, const char *name, H5T_t *src, H5T_t *dst, H5T_con
                     HGOTO_ERROR(H5E_DATATYPE, H5E_CANTREGISTER, FAIL,
                                 "unable to register ID for destination datatype");
 
-                if ((conv->u.app_func)(tmp_sid, tmp_did, &cdata, 0, 0, 0, NULL, NULL, H5CX_get_dxpl()) < 0) {
+                /* Prepare & restore library for user callback */
+                H5_BEFORE_USER_CB(FAIL)
+                    {
+                        ret_value = (conv->u.app_func)(tmp_sid, tmp_did, &cdata, 0, 0, 0, NULL, NULL,
+                                                       H5CX_get_dxpl());
+                    }
+                H5_AFTER_USER_CB(FAIL)
+                if (ret_value < 0) {
                     if (H5I_dec_ref(tmp_sid) < 0)
                         HGOTO_ERROR(H5E_DATATYPE, H5E_CANTDEC, FAIL,
                                     "unable to decrement reference count on temporary ID");
@@ -3684,7 +3691,7 @@ done:
 } /* end H5Tencode() */
 
 /*-------------------------------------------------------------------------
- * Function:  H5Tdecode
+ * Function:  H5Tdecode2
  *
  * Purpose:   Decode a binary object description and return a new object
  *            handle.
@@ -3696,7 +3703,7 @@ done:
  *-------------------------------------------------------------------------
  */
 hid_t
-H5Tdecode(const void *buf)
+H5Tdecode2(const void *buf, size_t buf_size)
 {
     H5T_t *dt;
     hid_t  ret_value; /* Return value */
@@ -3707,13 +3714,8 @@ H5Tdecode(const void *buf)
     if (buf == NULL)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, H5I_INVALID_HID, "empty buffer");
 
-    /* Create datatype by decoding buffer
-     * There is no way to get the size of the buffer, so we pass in
-     * SIZE_MAX and assume the caller knows what they are doing.
-     * Really fixing this will require an H5Tdecode2() call that
-     * takes a size parameter.
-     */
-    if (NULL == (dt = H5T_decode(SIZE_MAX, (const unsigned char *)buf)))
+    /* Create datatype by decoding buffer */
+    if (NULL == (dt = H5T_decode(buf_size, buf)))
         HGOTO_ERROR(H5E_DATATYPE, H5E_CANTDECODE, H5I_INVALID_HID, "can't decode object");
 
     /* Register the type and return the ID */
@@ -3722,7 +3724,7 @@ H5Tdecode(const void *buf)
 
 done:
     FUNC_LEAVE_API(ret_value)
-} /* end H5Tdecode() */
+} /* end H5Tdecode2() */
 
 /*-------------------------------------------------------------------------
  * API functions are above; library-private functions are below...
@@ -3787,9 +3789,9 @@ done:
  * Purpose:   Private function for H5Tdecode.  Reconstructs a binary
  *            description of datatype and returns a new object handle.
  *
- * Return:    Success:    datatype ID(non-negative)
+ * Return:    Success:    Pointer to the new type.
  *
- *            Failure:    negative
+ *            Failure:    NULL
  *
  *-------------------------------------------------------------------------
  */
@@ -3805,9 +3807,15 @@ H5T_decode(size_t buf_size, const unsigned char *buf)
     if (NULL == (f = H5F_fake_alloc((uint8_t)0)))
         HGOTO_ERROR(H5E_DATATYPE, H5E_CANTALLOC, NULL, "can't allocate fake file struct");
 
+    if (buf_size != SIZE_MAX && H5_IS_BUFFER_OVERFLOW(buf, 1, buf + buf_size - 1))
+        HGOTO_ERROR(H5E_DATATYPE, H5E_BADMESG, NULL, "buffer too small to be datatype message");
+
     /* Decode the type of the information */
     if (*buf++ != H5O_DTYPE_ID)
         HGOTO_ERROR(H5E_DATATYPE, H5E_BADMESG, NULL, "not an encoded datatype");
+
+    if (buf_size != SIZE_MAX && H5_IS_BUFFER_OVERFLOW(buf, 1, buf + buf_size - 1))
+        HGOTO_ERROR(H5E_DATATYPE, H5E_BADMESG, NULL, "buffer too small to be datatype message");
 
     /* Decode the version of the datatype information */
     if (*buf++ != H5T_ENCODE_VERSION)
@@ -5660,8 +5668,8 @@ H5T__path_find_real(const H5T_t *src, const H5T_t *dst, const char *name, H5T_co
     old_npaths = H5T_g.npaths;
 
     /* Set a few convenience variables */
-    new_api_func = (matched_path && conv->is_app && conv->u.app_func);
-    new_lib_func = (matched_path && !conv->is_app && conv->u.lib_func);
+    new_api_func = (matched_path && !noop_conv && conv->is_app && conv->u.app_func);
+    new_lib_func = (matched_path && !noop_conv && !conv->is_app && conv->u.lib_func);
 
     /* If we didn't find the path, if the caller is an API function specifying
      * a new hard conversion function, or if the caller is a private function
@@ -5870,7 +5878,13 @@ H5T__path_find_init_new_path(H5T_path_t *path, const H5T_t *src, const H5T_t *ds
                 HGOTO_ERROR(H5E_DATATYPE, H5E_CANTREGISTER, FAIL,
                             "unable to register ID for destination datatype");
 
-            status = (conv->u.app_func)(src_id, dst_id, &(path->cdata), 0, 0, 0, NULL, NULL, H5CX_get_dxpl());
+            /* Prepare & restore library for user callback */
+            H5_BEFORE_USER_CB(FAIL)
+                {
+                    status = (conv->u.app_func)(src_id, dst_id, &(path->cdata), 0, 0, 0, NULL, NULL,
+                                                H5CX_get_dxpl());
+                }
+            H5_AFTER_USER_CB(FAIL)
         }
         else
             status = (conv->u.lib_func)(path->src, path->dst, &(path->cdata), conv_ctx, 0, 0, 0, NULL, NULL);
@@ -5924,8 +5938,13 @@ H5T__path_find_init_new_path(H5T_path_t *path, const H5T_t *src, const H5T_t *ds
                 HGOTO_ERROR(H5E_DATATYPE, H5E_CANTREGISTER, FAIL,
                             "unable to register ID for destination datatype");
 
-            status = (H5T_g.soft[i].conv.u.app_func)(src_id, dst_id, &(path->cdata), 0, 0, 0, NULL, NULL,
-                                                     H5CX_get_dxpl());
+            /* Prepare & restore library for user callback */
+            H5_BEFORE_USER_CB(FAIL)
+                {
+                    status = (H5T_g.soft[i].conv.u.app_func)(src_id, dst_id, &(path->cdata), 0, 0, 0, NULL,
+                                                             NULL, H5CX_get_dxpl());
+                }
+            H5_AFTER_USER_CB(FAIL)
         }
         else
             status = (H5T_g.soft[i].conv.u.lib_func)(path->src, path->dst, &(path->cdata), conv_ctx, 0, 0, 0,
@@ -6010,9 +6029,16 @@ H5T__path_free(H5T_path_t *path, H5T_conv_ctx_t *conv_ctx)
 
         path->cdata.command = H5T_CONV_FREE;
 
-        if (path->conv.is_app)
-            status = (path->conv.u.app_func)(conv_ctx->u.free.src_type_id, conv_ctx->u.free.dst_type_id,
-                                             &(path->cdata), 0, 0, 0, NULL, NULL, H5CX_get_dxpl());
+        if (path->conv.is_app) {
+            /* Prepare & restore library for user callback */
+            H5_BEFORE_USER_CB_NOERR(FAIL)
+                {
+                    status =
+                        (path->conv.u.app_func)(conv_ctx->u.free.src_type_id, conv_ctx->u.free.dst_type_id,
+                                                &(path->cdata), 0, 0, 0, NULL, NULL, H5CX_get_dxpl());
+                }
+            H5_AFTER_USER_CB_NOERR(FAIL)
+        }
         else
             status =
                 (path->conv.u.lib_func)(path->src, path->dst, &(path->cdata), conv_ctx, 0, 0, 0, NULL, NULL);
@@ -6426,9 +6452,15 @@ H5T_convert_with_ctx(H5T_path_t *tpath, const H5T_t *src_type, const H5T_t *dst_
     /* Call the appropriate conversion callback */
     tpath->cdata.command = H5T_CONV_CONV;
     if (tpath->conv.is_app) {
-        if ((tpath->conv.u.app_func)(conv_ctx->u.conv.src_type_id, conv_ctx->u.conv.dst_type_id,
-                                     &(tpath->cdata), nelmts, buf_stride, bkg_stride, buf, bkg,
-                                     conv_ctx->u.conv.dxpl_id) < 0)
+        /* Prepare & restore library for user callback */
+        H5_BEFORE_USER_CB(FAIL)
+            {
+                ret_value = (tpath->conv.u.app_func)(
+                    conv_ctx->u.conv.src_type_id, conv_ctx->u.conv.dst_type_id, &(tpath->cdata), nelmts,
+                    buf_stride, bkg_stride, buf, bkg, conv_ctx->u.conv.dxpl_id);
+            }
+        H5_AFTER_USER_CB(FAIL)
+        if (ret_value < 0)
             HGOTO_ERROR(H5E_DATATYPE, H5E_CANTCONVERT, FAIL, "datatype conversion failed");
     } /* end if */
     else if ((tpath->conv.u.lib_func)(src_type, dst_type, &(tpath->cdata), conv_ctx, nelmts, buf_stride,

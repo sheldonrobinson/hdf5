@@ -6436,16 +6436,17 @@ test__Float16(void)
     }
 
     if (is_little_endian) {
-        if (path->conv.u.lib_func != H5T__conv_noop) {
+        if (strcmp(path->name, "no-op") != 0) {
             H5_FAILED();
-            printf("Conversion path for H5T_NATIVE_FLOAT16 -> H5T_IEEE_F16LE was not H5T__conv_noop\n");
+            printf("Conversion path for H5T_NATIVE_FLOAT16 -> H5T_IEEE_F16LE was not a no-op\n");
             goto error;
         }
     }
     else {
-        if (path->conv.u.lib_func != H5T__conv_order_opt) {
+        if (strcmp(path->name, "fbo(opt)") != 0) {
             H5_FAILED();
-            printf("Conversion path for H5T_NATIVE_FLOAT16 -> H5T_IEEE_F16LE was not H5T__conv_order\n");
+            printf(
+                "Conversion path for H5T_NATIVE_FLOAT16 -> H5T_IEEE_F16LE was not a byte-swap conversion\n");
             goto error;
         }
     }
@@ -6469,16 +6470,17 @@ test__Float16(void)
     }
 
     if (is_little_endian) {
-        if (path->conv.u.lib_func != H5T__conv_order_opt) {
+        if (strcmp(path->name, "fbo(opt)") != 0) {
             H5_FAILED();
-            printf("Conversion path for H5T_NATIVE_FLOAT16 -> H5T_IEEE_F16BE was not H5T__conv_order\n");
+            printf(
+                "Conversion path for H5T_NATIVE_FLOAT16 -> H5T_IEEE_F16BE was not a byte-swap conversion\n");
             goto error;
         }
     }
     else {
-        if (path->conv.u.lib_func != H5T__conv_noop) {
+        if (strcmp(path->name, "no-op") != 0) {
             H5_FAILED();
-            printf("Conversion path for H5T_NATIVE_FLOAT16 -> H5T_IEEE_F16BE was not H5T__conv_noop\n");
+            printf("Conversion path for H5T_NATIVE_FLOAT16 -> H5T_IEEE_F16BE was not a no-op\n");
             goto error;
         }
     }
@@ -7393,7 +7395,7 @@ test_complex_type_conv_funcs(void)
         printf("Invalid conversion path for H5T_NATIVE_FLOAT_COMPLEX -> H5T_NATIVE_FLOAT_COMPLEX\n");
         goto error;
     }
-    if (conv_path->conv.u.lib_func != H5T__conv_noop) {
+    if (strcmp(conv_path->name, "no-op") != 0) {
         H5_FAILED();
         printf("Conversion path for H5T_NATIVE_FLOAT_COMPLEX -> H5T_NATIVE_FLOAT_COMPLEX was not a no-op\n");
         goto error;
@@ -7409,7 +7411,7 @@ test_complex_type_conv_funcs(void)
         printf("Invalid conversion path for H5T_NATIVE_DOUBLE_COMPLEX -> H5T_NATIVE_DOUBLE_COMPLEX\n");
         goto error;
     }
-    if (conv_path->conv.u.lib_func != H5T__conv_noop) {
+    if (strcmp(conv_path->name, "no-op") != 0) {
         H5_FAILED();
         printf(
             "Conversion path for H5T_NATIVE_DOUBLE_COMPLEX -> H5T_NATIVE_DOUBLE_COMPLEX was not a no-op\n");
@@ -7426,7 +7428,7 @@ test_complex_type_conv_funcs(void)
         printf("Invalid conversion path for H5T_NATIVE_LDOUBLE_COMPLEX -> H5T_NATIVE_LDOUBLE_COMPLEX\n");
         goto error;
     }
-    if (conv_path->conv.u.lib_func != H5T__conv_noop) {
+    if (strcmp(conv_path->name, "no-op") != 0) {
         H5_FAILED();
         printf(
             "Conversion path for H5T_NATIVE_LDOUBLE_COMPLEX -> H5T_NATIVE_LDOUBLE_COMPLEX was not a no-op\n");
@@ -7453,7 +7455,7 @@ test_complex_type_conv_funcs(void)
         printf("Can't find datatype conversion path\n");
         goto error;
     }
-    if (conv_path->conv.u.lib_func != H5T__conv_order) {
+    if (strcmp(conv_path->name, "complexbo") != 0) {
         H5_FAILED();
         printf("Conversion path for H5T_COMPLEX_IEEE_F32LE -> H5T_COMPLEX_IEEE_F32BE was not a byte-swap "
                "conversion\n");
@@ -7465,7 +7467,7 @@ test_complex_type_conv_funcs(void)
         printf("Can't find datatype conversion path\n");
         goto error;
     }
-    if (conv_path->conv.u.lib_func != H5T__conv_order) {
+    if (strcmp(conv_path->name, "complexbo") != 0) {
         H5_FAILED();
         printf("Conversion path for H5T_COMPLEX_IEEE_F32BE -> H5T_COMPLEX_IEEE_F32LE was not a byte-swap "
                "conversion\n");
@@ -7881,7 +7883,7 @@ test_complex_array_compat_conv(void)
         printf("Invalid conversion path for complex type -> array type\n");
         goto error;
     }
-    if (conv_path->conv.u.lib_func != H5T__conv_complex_compat) {
+    if (strcmp(conv_path->name, "complex_array_compat") != 0) {
         H5_FAILED();
         printf("Conversion path for complex type -> array type was not a no-op\n");
         goto error;
@@ -7896,7 +7898,7 @@ test_complex_array_compat_conv(void)
         printf("Invalid conversion path for array type -> complex type\n");
         goto error;
     }
-    if (conv_path->conv.u.lib_func != H5T__conv_complex_compat) {
+    if (strcmp(conv_path->name, "array_complex_compat") != 0) {
         H5_FAILED();
         printf("Conversion path for array type -> complex type was not a no-op\n");
         goto error;
@@ -8338,7 +8340,7 @@ test_complex_compound_compat_conv(void)
         printf("Invalid conversion path for complex type -> compound type\n");
         goto error;
     }
-    if (conv_path->conv.u.lib_func != H5T__conv_complex_compat) {
+    if (strcmp(conv_path->name, "complex_compound_compat") != 0) {
         H5_FAILED();
         printf("Conversion path for complex type -> compound type was not a no-op\n");
         goto error;
@@ -8353,7 +8355,7 @@ test_complex_compound_compat_conv(void)
         printf("Invalid conversion path for compound type -> complex type\n");
         goto error;
     }
-    if (conv_path->conv.u.lib_func != H5T__conv_complex_compat) {
+    if (strcmp(conv_path->name, "compound_complex_compat") != 0) {
         H5_FAILED();
         printf("Conversion path for compound type -> complex type was not a no-op\n");
         goto error;
@@ -8924,7 +8926,7 @@ error:
  *-------------------------------------------------------------------------
  */
 static int
-test_encode(void)
+test_encode(bool H5_ATTR_DEPRECATED_USED use_old_decode_api)
 {
     struct cmpd {
         int    a;
@@ -8952,8 +8954,11 @@ test_encode(void)
     unsigned char *vlstr_buf      = NULL;
     hid_t          ret_id;
     herr_t         ret;
+    char           test_msg[128];
 
-    TESTING("functions of encoding and decoding datatypes");
+    snprintf(test_msg, sizeof(test_msg), "%s functions of encoding and decoding datatypes",
+             use_old_decode_api ? "old" : "new");
+    TESTING(test_msg);
 
     /* Create File */
     h5_fixname(FILENAME[5], H5P_DEFAULT, filename, sizeof filename);
@@ -9057,7 +9062,14 @@ test_encode(void)
     /* Try decoding an incorrect (empty) buffer (should fail) */
     H5E_BEGIN_TRY
     {
-        ret_id = H5Tdecode(cmpd_buf);
+#ifndef H5_NO_DEPRECATED_SYMBOLS
+        if (use_old_decode_api)
+            ret_id = H5Tdecode1(cmpd_buf);
+        else
+            ret_id = H5Tdecode2(cmpd_buf, cmpd_buf_size);
+#else
+        ret_id = H5Tdecode2(cmpd_buf, cmpd_buf_size);
+#endif
     }
     H5E_END_TRY
     if (ret_id != FAIL) {
@@ -9073,7 +9085,16 @@ test_encode(void)
     }
 
     /* Decode from the compound buffer and return an object handle */
-    if ((decoded_tid1 = H5Tdecode(cmpd_buf)) < 0)
+#ifndef H5_NO_DEPRECATED_SYMBOLS
+    if (use_old_decode_api)
+        decoded_tid1 = H5Tdecode1(cmpd_buf);
+    else
+        decoded_tid1 = H5Tdecode2(cmpd_buf, cmpd_buf_size);
+#else
+    decoded_tid1 = H5Tdecode2(cmpd_buf, cmpd_buf_size);
+#endif
+
+    if (decoded_tid1 < 0)
         FAIL_PUTS_ERROR("Can't decode compound type\n");
 
     /* Verify that the datatype was copied exactly */
@@ -9112,7 +9133,16 @@ test_encode(void)
     }
 
     /* Decode from the enumerate buffer and return an object handle */
-    if ((decoded_tid2 = H5Tdecode(enum_buf)) < 0) {
+#ifndef H5_NO_DEPRECATED_SYMBOLS
+    if (use_old_decode_api)
+        decoded_tid2 = H5Tdecode1(enum_buf);
+    else
+        decoded_tid2 = H5Tdecode2(enum_buf, enum_buf_size);
+#else
+    decoded_tid2 = H5Tdecode2(enum_buf, enum_buf_size);
+#endif
+
+    if (decoded_tid2 < 0) {
         H5_FAILED();
         printf("Can't decode enumerate type\n");
         goto error;
@@ -9154,7 +9184,16 @@ test_encode(void)
     }
 
     /* Decode from the VL string buffer and return an object handle */
-    if ((decoded_tid3 = H5Tdecode(vlstr_buf)) < 0) {
+#ifndef H5_NO_DEPRECATED_SYMBOLS
+    if (use_old_decode_api)
+        decoded_tid3 = H5Tdecode1(vlstr_buf);
+    else
+        decoded_tid3 = H5Tdecode2(vlstr_buf, vlstr_buf_size);
+#else
+    decoded_tid3 = H5Tdecode2(vlstr_buf, vlstr_buf_size);
+#endif
+
+    if (decoded_tid3 < 0) {
         H5_FAILED();
         printf("Can't decode VL string type\n");
         goto error;
@@ -9262,7 +9301,16 @@ test_encode(void)
     }
 
     /* Decode from the compound buffer and return an object handle */
-    if ((decoded_tid1 = H5Tdecode(cmpd_buf)) < 0)
+#ifndef H5_NO_DEPRECATED_SYMBOLS
+    if (use_old_decode_api)
+        decoded_tid1 = H5Tdecode1(cmpd_buf);
+    else
+        decoded_tid1 = H5Tdecode2(cmpd_buf, cmpd_buf_size);
+#else
+    decoded_tid1 = H5Tdecode2(cmpd_buf, cmpd_buf_size);
+#endif
+
+    if (decoded_tid1 < 0)
         FAIL_PUTS_ERROR("Can't decode compound type\n");
 
     /* Verify that the datatype was copied exactly */
@@ -9301,7 +9349,16 @@ test_encode(void)
     }
 
     /* Decode from the enumerate buffer and return an object handle */
-    if ((decoded_tid2 = H5Tdecode(enum_buf)) < 0) {
+#ifndef H5_NO_DEPRECATED_SYMBOLS
+    if (use_old_decode_api)
+        decoded_tid2 = H5Tdecode1(enum_buf);
+    else
+        decoded_tid2 = H5Tdecode2(enum_buf, enum_buf_size);
+#else
+    decoded_tid2 = H5Tdecode2(enum_buf, enum_buf_size);
+#endif
+
+    if (decoded_tid2 < 0) {
         H5_FAILED();
         printf("Can't decode enumerate type\n");
         goto error;
@@ -9343,11 +9400,21 @@ test_encode(void)
     }
 
     /* Decode from the VL string buffer and return an object handle */
-    if ((decoded_tid3 = H5Tdecode(vlstr_buf)) < 0) {
+#ifndef H5_NO_DEPRECATED_SYMBOLS
+    if (use_old_decode_api)
+        decoded_tid3 = H5Tdecode1(vlstr_buf);
+    else
+        decoded_tid3 = H5Tdecode2(vlstr_buf, vlstr_buf_size);
+#else
+    decoded_tid3 = H5Tdecode2(vlstr_buf, vlstr_buf_size);
+#endif
+
+    if (decoded_tid3 < 0) {
         H5_FAILED();
         printf("Can't decode VL string type\n");
         goto error;
     }
+
     free(vlstr_buf);
 
     /* Verify that the datatype was copied exactly */
@@ -12823,7 +12890,10 @@ main(void)
     nerrors += test_set_fields_offset();
     nerrors += test_transient(fapl);
     nerrors += test_named(fapl);
-    nerrors += test_encode();
+#ifndef H5_NO_DEPRECATED_SYMBOLS
+    nerrors += test_encode(true);
+#endif /* H5_NO_DEPRECATED_SYMBOLS */
+    nerrors += test_encode(false);
     nerrors += test_latest();
     nerrors += test_int_float_except();
     nerrors += test_named_indirect_reopen(fapl);

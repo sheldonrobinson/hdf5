@@ -91,16 +91,16 @@
  * Verbose queries
  * Only None needs an exact match.  The rest are at least as much.
  */
-#define VERBOSE_NONE (TestVerbosity_g == VERBO_NONE)
-#define VERBOSE_DEF  (TestVerbosity_g >= VERBO_DEF)
-#define VERBOSE_LO   (TestVerbosity_g >= VERBO_LO)
-#define VERBOSE_MED  (TestVerbosity_g >= VERBO_MED)
-#define VERBOSE_HI   (TestVerbosity_g >= VERBO_HI)
+#define VERBOSE_NONE (GetTestVerbosity() == VERBO_NONE)
+#define VERBOSE_DEF  (GetTestVerbosity() >= VERBO_DEF)
+#define VERBOSE_LO   (GetTestVerbosity() >= VERBO_LO)
+#define VERBOSE_MED  (GetTestVerbosity() >= VERBO_MED)
+#define VERBOSE_HI   (GetTestVerbosity() >= VERBO_HI)
 
 /* Used to document process through a test */
 #define MESSAGE(V, A)                                                                                        \
     do {                                                                                                     \
-        if (TestFrameworkProcessID_g == 0 && TestVerbosity_g > (V))                                          \
+        if (GetTestFrameworkProcessID() == 0 && GetTestVerbosity() > (V))                                    \
             printf A;                                                                                        \
     } while (0)
 
@@ -111,9 +111,6 @@
 /*************/
 /* Variables */
 /*************/
-
-H5TEST_DLLVAR int TestFrameworkProcessID_g;
-H5TEST_DLLVAR int TestVerbosity_g;
 
 /**************/
 /* Prototypes */
@@ -343,7 +340,7 @@ H5TEST_DLL void TestInfo(FILE *stream);
  * \see PerformTests()
  *
  */
-H5TEST_DLL herr_t AddTest(const char *TestName, void (*TestFunc)(const void *), void (*TestSetupFunc)(void *),
+H5TEST_DLL herr_t AddTest(const char *TestName, void (*TestFunc)(void *), void (*TestSetupFunc)(void *),
                           void (*TestCleanupFunc)(void *), const void *TestData, size_t TestDataSize,
                           const char *TestDescr);
 
@@ -426,6 +423,20 @@ H5TEST_DLL void TestSummary(FILE *stream);
  * --------------------------------------------------------------------------
  * \ingroup H5TEST
  *
+ * \brief Returns the MPI rank for this process
+ *
+ * \return The MPI rank of this process
+ *
+ * \details GetTestFrameworkProcessID() returns the MPI rank for this process.
+ *          Always returns rank 0 in serial HDF5.
+ *
+ */
+H5TEST_DLL int GetTestFrameworkProcessID(void);
+
+/**
+ * --------------------------------------------------------------------------
+ * \ingroup H5TEST
+ *
  * \brief Returns the current test verbosity level setting
  *
  * \return The current test verbosity level setting
@@ -502,17 +513,18 @@ H5TEST_DLL herr_t ParseTestVerbosity(char *argv);
  *          expedited. The variable may be set to one of the following
  *          values:
  *
- *          0: Exhaustive run
- *             Tests should take as long as necessary
- *          1: Full run. Default value if H5_TEST_EXPRESS_LEVEL_DEFAULT
- *             and the HDF5TestExpress environment variable are not defined
- *             Tests should take no more than 30 minutes
- *          2: Quick run
- *             Tests should take no more than 10 minutes
- *          3: Smoke test.
+ *          0 / H5_TEST_EXPRESS_EXHAUSTIVE: Exhaustive run
+ *             Tests should take as long as necessary.
+ *          1 / H5_TEST_EXPRESS_FULL: Full run
+ *             Default value if H5_TEST_EXPRESS_LEVEL_DEFAULT and the
+ *             HDF5TestExpress environment variable are not defined.
+ *             Tests should take no more than 30 minutes.
+ *          2 / H5_TEST_EXPRESS_QUICK: Quick run
+ *             Tests should take no more than 10 minutes.
+ *          3 / H5_TEST_EXPRESS_SMOKE_TEST: Smoke test
  *             Default if the HDF5TestExpress environment variable is set to
- *             a value other than 0-3
- *             Tests should take less than 1 minute
+ *             a value other than 0-3.
+ *             Tests should take less than 1 minute.
  *
  *          The macro H5_TEST_EXPRESS_LEVEL_DEFAULT may be defined to one
  *          of these values at library configuration time in order to

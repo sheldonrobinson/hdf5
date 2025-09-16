@@ -28,6 +28,9 @@
 
 /**  \page H5G_UG HDF5 Groups
  *
+ * Navigate back: \ref index "Main" / \ref UG
+ * <hr>
+ *
  * \section sec_group HDF5 Groups
  * \subsection subsec_group_intro Introduction
  * As suggested by the name Hierarchical Data Format, an HDF5 file is hierarchically structured.
@@ -317,15 +320,12 @@
  * stored in either the original indexed format or the compact-or-indexed format.
  *
  * \subsection subsec_group_h5dump Using h5dump
- * You can use h5dump, the command-line utility distributed with HDF5, to examine a file for
+ * You can use \ref sec_cltools_h5dump, the command-line utility distributed with HDF5, to examine a file for
  * purposes either of determining where to create an object within an HDF5 file or to verify that
  * you have created an object in the intended place.
  *
- * In the case of the new group created later in this chapter, the following h5dump command will
- * display the contents of FileA.h5:
- * \code
- * h5dump FileA.h5
- * \endcode
+ * In the case of the new group created later in this chapter, the following \ref sec_cltools_h5dump command
+ * will display the contents of FileA.h5: \code h5dump FileA.h5 \endcode
  *
  * For more information, @see @ref subsubsec_group_program_create.
  *
@@ -342,7 +342,7 @@
  * }
  * \endcode
  *
- * h5dump is described on the “HDF5 Tools” page of the \ref RM.
+ * \ref sec_cltools_h5dump is described on the \ref sec_cltools page of the \ref UG.
  *
  * The HDF5 DDL grammar is described in the @ref DDLBNF200.
  *
@@ -852,6 +852,9 @@
  * </table>
  *
  * Previous Chapter \ref sec_file - Next Chapter \ref sec_dataset
+ *
+ * <hr>
+ * Navigate back: \ref index "Main" / \ref UG
  *
  */
 

@@ -39,31 +39,31 @@
  */
 
 /**
- * Property list class root, is not user-accessible
+ * Property list class root, is not user-accessible \since 1.8.0
  */
 #define H5P_ROOT (H5OPEN H5P_CLS_ROOT_ID_g)
 /**
- * Object creation property list class, is not user-accessible
+ * Object creation property list class, is not user-accessible \since 1.8.0
  */
 #define H5P_OBJECT_CREATE (H5OPEN H5P_CLS_OBJECT_CREATE_ID_g)
 /**
- * File creation property list class
+ * File creation property list class \since 1.0.0
  */
 #define H5P_FILE_CREATE (H5OPEN H5P_CLS_FILE_CREATE_ID_g)
 /**
- * File access property list class
+ * File access property list class \since 1.0.0
  */
 #define H5P_FILE_ACCESS (H5OPEN H5P_CLS_FILE_ACCESS_ID_g)
 /**
- * Dataset creation property list class
+ * Dataset creation property list class \since 1.0.0
  */
 #define H5P_DATASET_CREATE (H5OPEN H5P_CLS_DATASET_CREATE_ID_g)
 /**
- * Dataset access property list class
+ * Dataset access property list class \since 1.8.0
  */
 #define H5P_DATASET_ACCESS (H5OPEN H5P_CLS_DATASET_ACCESS_ID_g)
 /**
- * Dataset transfer property list class
+ * Dataset transfer property list class \since 1.0.0
  */
 #define H5P_DATASET_XFER (H5OPEN H5P_CLS_DATASET_XFER_ID_g)
 /**
@@ -71,19 +71,19 @@
  */
 #define H5P_FILE_MOUNT (H5OPEN H5P_CLS_FILE_MOUNT_ID_g)
 /**
- * Group creation property list class
+ * Group creation property list class \since 1.8.0
  */
 #define H5P_GROUP_CREATE (H5OPEN H5P_CLS_GROUP_CREATE_ID_g)
 /**
- * Group access property list class
+ * Group access property list class \since 1.8.0
  */
 #define H5P_GROUP_ACCESS (H5OPEN H5P_CLS_GROUP_ACCESS_ID_g)
 /**
- * Datatype creation property list class
+ * Datatype creation property list class \since 1.8.0
  */
 #define H5P_DATATYPE_CREATE (H5OPEN H5P_CLS_DATATYPE_CREATE_ID_g)
 /**
- * Datatype access property list class
+ * Datatype access property list class \since 1.8.0
  */
 #define H5P_DATATYPE_ACCESS (H5OPEN H5P_CLS_DATATYPE_ACCESS_ID_g)
 /**
@@ -99,7 +99,7 @@
  */
 #define H5P_STRING_CREATE (H5OPEN H5P_CLS_STRING_CREATE_ID_g)
 /**
- * Attribute creation property list class
+ * Attribute creation property list class \since 1.8.0
  */
 #define H5P_ATTRIBUTE_CREATE (H5OPEN H5P_CLS_ATTRIBUTE_CREATE_ID_g)
 /**
@@ -143,7 +143,7 @@
  */
 #define H5P_DATASET_CREATE_DEFAULT (H5OPEN H5P_LST_DATASET_CREATE_ID_g)
 /**
- * Dataset access default property list
+ * Dataset access default property list \since 1.8.0
  */
 #define H5P_DATASET_ACCESS_DEFAULT (H5OPEN H5P_LST_DATASET_ACCESS_ID_g)
 /**
@@ -155,19 +155,19 @@
  */
 #define H5P_FILE_MOUNT_DEFAULT (H5OPEN H5P_LST_FILE_MOUNT_ID_g)
 /**
- * Group creation default property list
+ * Group creation default property list \since 1.8.0
  */
 #define H5P_GROUP_CREATE_DEFAULT (H5OPEN H5P_LST_GROUP_CREATE_ID_g)
 /**
- * Group access default property list
+ * Group access default property list \since 1.8.0
  */
 #define H5P_GROUP_ACCESS_DEFAULT (H5OPEN H5P_LST_GROUP_ACCESS_ID_g)
 /**
- * Datytype creation default property list
+ * Datytype creation default property list \since 1.8.0
  */
 #define H5P_DATATYPE_CREATE_DEFAULT (H5OPEN H5P_LST_DATATYPE_CREATE_ID_g)
 /**
- * Datytype access default property list
+ * Datytype access default property list \since 1.8.0
  */
 #define H5P_DATATYPE_ACCESS_DEFAULT (H5OPEN H5P_LST_DATATYPE_ACCESS_ID_g)
 /**
@@ -179,7 +179,7 @@
  */
 #define H5P_MAP_ACCESS_DEFAULT (H5OPEN H5P_LST_MAP_ACCESS_ID_g)
 /**
- * Attribute creation default property list
+ * Attribute creation default property list \since 1.8.0
  */
 #define H5P_ATTRIBUTE_CREATE_DEFAULT (H5OPEN H5P_LST_ATTRIBUTE_CREATE_ID_g)
 /**
@@ -215,7 +215,7 @@
  */
 #define H5P_CRT_ORDER_INDEXED 0x0002
 /**
- * Default value of type \ref hid_t for all property list classes
+ * Default value of type \ref hid_t for all property list classes \since 1.0.0
  */
 #define H5P_DEFAULT 0 /* (hid_t) */
 
@@ -1012,7 +1012,7 @@ H5_DLL htri_t H5Pexist(hid_t plist_id, const char *name);
  *
  *          The property name must exist or this routine will fail.
  *
- *          If the \p get callback routine returns an error, \ value will
+ *          If the \p get callback routine returns an error, \p value will
  *          not be modified.
  *
  * \since 1.4.0
@@ -2239,7 +2239,7 @@ H5_DLL int H5Pget_nfilters(hid_t plist_id);
  * \since 1.8.0
  *
  */
-H5_DLL herr_t H5Pget_obj_track_times(hid_t plist_id, hbool_t *track_times);
+H5_DLL herr_t H5Pget_obj_track_times(hid_t plist_id, bool *track_times);
 /**
  * \ingroup OCPL
  *
@@ -2741,7 +2741,7 @@ H5_DLL herr_t H5Pset_deflate(hid_t plist_id, unsigned level);
  *       (The SZIP filter is an exception to this rule; see H5Pset_szip()
  *       for details.)
  *
- * \see \ref_filter_pipe, \ref_group_impls
+ * \see \ref_filter_pipe, \ref H5G
  *
  * \version 1.8.5 Function applied to group creation property lists.
  * \since 1.6.0
@@ -2820,7 +2820,7 @@ H5_DLL herr_t H5Pset_fletcher32(hid_t plist_id);
  * \since 1.8.0
  *
  */
-H5_DLL herr_t H5Pset_obj_track_times(hid_t plist_id, hbool_t track_times);
+H5_DLL herr_t H5Pset_obj_track_times(hid_t plist_id, bool track_times);
 
 /* File creation property list (FCPL) routines */
 /**
@@ -2873,7 +2873,7 @@ H5_DLL herr_t H5Pget_file_space_page_size(hid_t plist_id, hsize_t *fsp_size);
  * \since 1.10.1
  *
  */
-H5_DLL herr_t H5Pget_file_space_strategy(hid_t plist_id, H5F_fspace_strategy_t *strategy, hbool_t *persist,
+H5_DLL herr_t H5Pget_file_space_strategy(hid_t plist_id, H5F_fspace_strategy_t *strategy, bool *persist,
                                          hsize_t *threshold);
 /**
  * \ingroup FCPL
@@ -3121,7 +3121,7 @@ H5_DLL herr_t H5Pset_file_space_page_size(hid_t plist_id, hsize_t fsp_size);
  * \since 1.10.1
  *
  */
-H5_DLL herr_t H5Pset_file_space_strategy(hid_t plist_id, H5F_fspace_strategy_t strategy, hbool_t persist,
+H5_DLL herr_t H5Pset_file_space_strategy(hid_t plist_id, H5F_fspace_strategy_t strategy, bool persist,
                                          hsize_t threshold);
 /**
  * \ingroup FCPL
@@ -3471,7 +3471,7 @@ H5_DLL herr_t H5Pget_cache(hid_t plist_id, int *mdc_nelmts, /* out */
  * \since 1.8.13
  *
  */
-H5_DLL herr_t H5Pget_core_write_tracking(hid_t fapl_id, hbool_t *is_enabled, size_t *page_size);
+H5_DLL herr_t H5Pget_core_write_tracking(hid_t fapl_id, bool *is_enabled, size_t *page_size);
 /**
  * \ingroup FAPL
  *
@@ -3613,7 +3613,7 @@ H5_DLL herr_t H5Pget_elink_file_cache_size(hid_t plist_id, unsigned *efc_size);
  * \since 1.10.1
  *
  */
-H5_DLL herr_t H5Pget_evict_on_close(hid_t fapl_id, hbool_t *evict_on_close);
+H5_DLL herr_t H5Pget_evict_on_close(hid_t fapl_id, bool *evict_on_close);
 /**
  * \ingroup FAPL
  *
@@ -3629,7 +3629,7 @@ H5_DLL herr_t H5Pget_evict_on_close(hid_t fapl_id, hbool_t *evict_on_close);
  *          application can retrieve a file handle for low-level access to
  *          a particular member of a family of files. The file handle is
  *          retrieved with a separate call to H5Fget_vfd_handle() (or,
- *          in special circumstances, to H5FDget_vfd_handle(), see \ref VFL).
+ *          in special circumstances, to H5FDget_vfd_handle(), see \ref VFLTN).
  *
  * \since 1.6.0
  *
@@ -3700,8 +3700,7 @@ H5_DLL herr_t H5Pget_fclose_degree(hid_t fapl_id, H5F_close_degree_t *degree);
  * \see H5LTopen_file_image(), H5Fget_file_image(), H5Pset_file_image(),
  *      H5Pset_file_image_callbacks(), H5Pget_file_image_callbacks(),
  *      \ref H5FD_file_image_callbacks_t, \ref H5FD_file_image_op_t,
- *      <a href="https://\DOCURL/advanced_topics/file_image_ops.md">
- *      HDF5 File Image Operations</a>.
+ *      \ref H5FIM_UG.
  *
  *
  * \since 1.8.9
@@ -3731,7 +3730,7 @@ H5_DLL herr_t H5Pget_file_image(hid_t fapl_id, void **buf_ptr_ptr, size_t *buf_l
  *          The callbacks must have been previously set with
  *          H5Pset_file_image_callbacks() in the file access property list.
  *
- *          Upon the successful return of H5Pset_file_image_callbacks(), the
+ *          Upon the successful return of H5Pget_file_image_callbacks(), the
  *          fields in the instance of the #H5FD_file_image_callbacks_t struct
  *          pointed to by \p callbacks_ptr will contain the same values as were
  *          passed in the most recent H5Pset_file_image_callbacks() call for the
@@ -3740,8 +3739,7 @@ H5_DLL herr_t H5Pget_file_image(hid_t fapl_id, void **buf_ptr_ptr, size_t *buf_l
  * \see H5LTopen_file_image(), H5Fget_file_image(), H5Pset_file_image(),
  *      H5Pset_file_image_callbacks(), H5Pget_file_image_callbacks(),
  *      \ref H5FD_file_image_callbacks_t, \ref H5FD_file_image_op_t,
- *      <a href="https://\DOCURL/advanced_topics/file_image_ops.md">
- *      HDF5 File Image Operations</a>.
+ *      \ref H5FIM_UG.
  *
  * \since 1.8.9
  *
@@ -3763,7 +3761,7 @@ H5_DLL herr_t H5Pget_file_image_callbacks(hid_t fapl_id, H5FD_file_image_callbac
  * \since 1.10.7
  *
  */
-H5_DLL herr_t H5Pget_file_locking(hid_t fapl_id, hbool_t *use_file_locking, hbool_t *ignore_when_disabled);
+H5_DLL herr_t H5Pget_file_locking(hid_t fapl_id, bool *use_file_locking, bool *ignore_when_disabled);
 /**
  * \ingroup FAPL
  *
@@ -3915,13 +3913,12 @@ H5_DLL herr_t H5Pget_mdc_image_config(hid_t plist_id, H5AC_cache_image_config_t 
  *          access property list, and H5Fget_mdc_logging_status() will return
  *          the current state of the logging flags.
  *
- *          The log format is described in the
- *           <a href="https://bit.ly/2PG6fNv">Metadata Cache Logging</a> document.
+ *          The log format is described in the \ref_rfc20140224 document.
  *
  * \since 1.10.0
  */
-H5_DLL herr_t H5Pget_mdc_log_options(hid_t plist_id, hbool_t *is_enabled, char *location,
-                                     size_t *location_size, hbool_t *start_on_access);
+H5_DLL herr_t H5Pget_mdc_log_options(hid_t plist_id, bool *is_enabled, char *location, size_t *location_size,
+                                     bool *start_on_access);
 /**
  * \ingroup FAPL
  *
@@ -4246,7 +4243,7 @@ H5_DLL herr_t H5Pset_alignment(hid_t fapl_id, hsize_t threshold, hsize_t alignme
  *                        approximately 100 times that number of chunks.
  *                        The default value is 521.
  * \param[in] rdcc_nbytes Total size of the raw data chunk cache in bytes.
- *                        The default size is 1 MB per dataset.
+ *                        The default size is 8 MiB per dataset.
  * \param[in] rdcc_w0     The chunk preemption policy for all datasets.
  *                        This must be between 0 and 1 inclusive and
  *                        indicates the weighting according to which chunks
@@ -4378,7 +4375,7 @@ H5_DLL herr_t H5Pset_cache(hid_t plist_id, int mdc_nelmts, size_t rdcc_nslots, s
  * \since 1.8.13
  *
  */
-H5_DLL herr_t H5Pset_core_write_tracking(hid_t fapl_id, hbool_t is_enabled, size_t page_size);
+H5_DLL herr_t H5Pset_core_write_tracking(hid_t fapl_id, bool is_enabled, size_t page_size);
 /**
  * \ingroup FAPL
  *
@@ -4562,7 +4559,7 @@ H5_DLL herr_t H5Pset_elink_file_cache_size(hid_t plist_id, unsigned efc_size);
  * \since 1.10.1
  *
  */
-H5_DLL herr_t H5Pset_evict_on_close(hid_t fapl_id, hbool_t evict_on_close);
+H5_DLL herr_t H5Pset_evict_on_close(hid_t fapl_id, bool evict_on_close);
 /**
  * \ingroup FAPL
  *
@@ -4579,7 +4576,7 @@ H5_DLL herr_t H5Pset_evict_on_close(hid_t fapl_id, hbool_t evict_on_close);
  *          retrieve a file handle for low-level access to a particular member
  *          of a family of files. The file handle is retrieved with a separate
  *          call to H5Fget_vfd_handle() (or, in special circumstances, to
- *          H5FDget_vfd_handle(); see \ref VFL).
+ *          H5FDget_vfd_handle(); see \ref VFLTN).
  *
  *          The value of \p offset is an offset in bytes from the beginning of
  *          the HDF5 file, identifying a user-determined location within the
@@ -4683,9 +4680,7 @@ H5_DLL herr_t H5Pset_fclose_degree(hid_t fapl_id, H5F_close_degree_t degree);
  *          \par Recommended Reading:
  *          This function is part of the file image
  *          operations feature set. It is highly recommended to study the guide
- *          [<em>HDF5 File Image Operations</em>]
- *          (https://\DOCURL/advanced_topics/file_image_ops.md
- *          ) before using this feature set. See the “See Also” section below
+ *          \ref H5FIM_UG before using this feature set. See the “See Also” section below
  *          for links to other elements of HDF5 file image operations.
  *
  * \see
@@ -4695,10 +4690,7 @@ H5_DLL herr_t H5Pset_fclose_degree(hid_t fapl_id, H5F_close_degree_t degree);
  *    \li H5Pset_file_image_callbacks()
  *    \li H5Pget_file_image_callbacks()
  *
- *    \li [HDF5 File Image Operations]
- *        (https://\DOCURL/advanced_topics/file_image_ops.md)
- *        in [Advanced Topics in HDF5]
- *        (https://\DOCURL/advanced_topics_list.md)
+ *    \li \ref H5FIM_UG
  *
  *    \li Within H5Pset_file_image_callbacks():
  *    \li Callback #H5FD_file_image_callbacks_t
@@ -4720,9 +4712,7 @@ H5_DLL herr_t H5Pset_file_image(hid_t fapl_id, void *buf_ptr, size_t buf_len);
  *            can then use the file without the overhead of disk I/O.\n
  *            **Recommended Reading:** This function is part of the file
  *            image operations feature set. It is highly recommended to study
- *            the guide [HDF5 File Image Operations]
- *            (https://\DOCURL/advanced_topics/file_image_ops.md
- *            ) before using this feature set. See the “See Also” section below
+ *            the guide \ref H5FIM_UG before using this feature set. See the “See Also” section below
  *            for links to other elements of HDF5 file image operations.
  *
  * \fapl_id
@@ -4902,7 +4892,7 @@ H5_DLL herr_t H5Pset_file_image_callbacks(hid_t fapl_id, H5FD_file_image_callbac
  * \since 1.10.7
  *
  */
-H5_DLL herr_t H5Pset_file_locking(hid_t fapl_id, hbool_t use_file_locking, hbool_t ignore_when_disabled);
+H5_DLL herr_t H5Pset_file_locking(hid_t fapl_id, bool use_file_locking, bool ignore_when_disabled);
 /**
  * \ingroup FAPL
  *
@@ -4920,7 +4910,7 @@ H5_DLL herr_t H5Pset_file_locking(hid_t fapl_id, hbool_t use_file_locking, hbool
  *          HDF5 file's global heap. If garbage collection is on and the user
  *          passes in an uninitialized value in a reference structure, the heap
  *          might get corrupted. When garbage collection is off, however, and
- *          the user re-uses a reference, the previous heap block will be
+ *          the user reuses a reference, the previous heap block will be
  *          orphaned and not returned to the free heap space.
  *
  *          When garbage collection is on, the user must initialize the
@@ -4967,9 +4957,9 @@ H5_DLL herr_t H5Pset_gc_references(hid_t fapl_id, unsigned gc_ref);
  *          enumerated values in the #H5F_libver_t struct, which is
  *          defined in H5Fpublic.h.
  *
- *          The macro #H5F_LIBVER_LATEST is aliased to the highest
- *          enumerated value in #H5F_libver_t, indicating that this is
- *          currently the latest format available.
+ *          #H5F_LIBVER_LATEST is equivalent to the highest explicitly numbered
+ *          API value in #H5F_libver_t, indicating that this is currently the
+ *          latest format available.
  *
  *          The library supports the following pairs of (\p low, \p high)
  *          combinations as derived from the values in #H5F_libver_t:
@@ -5217,8 +5207,8 @@ H5_DLL herr_t H5Pset_mdc_config(hid_t plist_id, H5AC_cache_config_t *config_ptr)
  * \since 1.10.0
  *
  */
-H5_DLL herr_t H5Pset_mdc_log_options(hid_t plist_id, hbool_t is_enabled, const char *location,
-                                     hbool_t start_on_access);
+H5_DLL herr_t H5Pset_mdc_log_options(hid_t plist_id, bool is_enabled, const char *location,
+                                     bool start_on_access);
 /**
  * \ingroup FAPL
  *
@@ -5326,7 +5316,7 @@ H5_DLL herr_t H5Pset_metadata_read_attempts(hid_t plist_id, unsigned attempts);
  *          low-level access to the particular member of a set of \TText{MULTI}
  *          files in which that type of data is stored. The file handle is
  *          retrieved with a separate call to H5Fget_vfd_handle() (or, in special
- *          circumstances, to H5FDget_vfd_handle(); see \ref VFL.
+ *          circumstances, to H5FDget_vfd_handle(); see \ref VFLTN.
  *
  * The type of data specified in \p type may be one of the following:
  *
@@ -5580,7 +5570,7 @@ H5_DLL herr_t H5Pget_vol_cap_flags(hid_t plist_id, uint64_t *cap_flags);
  *
  * \since 1.10.0
  */
-H5_DLL herr_t H5Pset_all_coll_metadata_ops(hid_t plist_id, hbool_t is_collective);
+H5_DLL herr_t H5Pset_all_coll_metadata_ops(hid_t plist_id, bool is_collective);
 /**
  * \ingroup GAPL
  *
@@ -5600,7 +5590,7 @@ H5_DLL herr_t H5Pset_all_coll_metadata_ops(hid_t plist_id, hbool_t is_collective
  *
  * \since 1.10.0
  */
-H5_DLL herr_t H5Pget_all_coll_metadata_ops(hid_t plist_id, hbool_t *is_collective);
+H5_DLL herr_t H5Pget_all_coll_metadata_ops(hid_t plist_id, bool *is_collective);
 /**
  * \ingroup FAPL
  *
@@ -5629,7 +5619,7 @@ H5_DLL herr_t H5Pget_all_coll_metadata_ops(hid_t plist_id, hbool_t *is_collectiv
  *
  * \since 1.10.0
  */
-H5_DLL herr_t H5Pset_coll_metadata_write(hid_t plist_id, hbool_t is_collective);
+H5_DLL herr_t H5Pset_coll_metadata_write(hid_t plist_id, bool is_collective);
 /**
  * \ingroup FAPL
  *
@@ -5648,7 +5638,7 @@ H5_DLL herr_t H5Pset_coll_metadata_write(hid_t plist_id, hbool_t is_collective);
  *
  * \since 1.10.0
  */
-H5_DLL herr_t H5Pget_coll_metadata_write(hid_t plist_id, hbool_t *is_collective);
+H5_DLL herr_t H5Pget_coll_metadata_write(hid_t plist_id, bool *is_collective);
 
 /**
  * \ingroup FAPL
@@ -5779,6 +5769,14 @@ H5_DLL herr_t H5Pset_mdc_image_config(hid_t plist_id, H5AC_cache_image_config_t 
  *          The function also allows setting the minimum percentage of pages for
  *          metadata and raw data to prevent a certain type of data to evict hot
  *          data of the other type.
+ *
+ * \note    As of HDF5 2.0.0, the default page buffer size (0) may be overridden
+ *          in some circumstances, such as when using the ROS3 file driver. To
+ *          forcibly disable the page buffer, call this function with
+ *          buf_size set to 0. To return this setting to the overridable
+ *          default, call this function with buf_size set to
+ *          H5F_PAGE_BUFFER_SIZE_DEFAULT. This macro is only available in HDF5
+ *          2.0.0 and later.
  *
  * \since 1.10.1
  *
@@ -6011,7 +6009,7 @@ H5_DLL herr_t H5Pget_chunk_opts(hid_t plist_id, unsigned *opts);
  * \since 1.10.5
  *
  */
-H5_DLL herr_t H5Pget_dset_no_attrs_hint(hid_t dcpl_id, hbool_t *minimize);
+H5_DLL herr_t H5Pget_dset_no_attrs_hint(hid_t dcpl_id, bool *minimize);
 /**
  * \ingroup DCPL
  *
@@ -6494,7 +6492,7 @@ H5_DLL herr_t H5Pset_chunk_opts(hid_t plist_id, unsigned opts);
  * \since 1.10.5
  *
  */
-H5_DLL herr_t H5Pset_dset_no_attrs_hint(hid_t dcpl_id, hbool_t minimize);
+H5_DLL herr_t H5Pset_dset_no_attrs_hint(hid_t dcpl_id, bool minimize);
 /**
  * \ingroup DCPL
  *
@@ -7080,7 +7078,7 @@ H5_DLL herr_t H5Pset_szip(hid_t plist_id, unsigned options_mask, unsigned pixels
  * \param[in] vspace_id The dataspace identifier with the selection within the
  *            virtual dataset applied, possibly an unlimited selection
  * \param[in] src_file_name The name of the HDF5 file where the source dataset is
- *            located or a \TText{"."} (period) for a source dataset in the same
+ *            located or a \TText{.} (period) for a source dataset in the same
  *            file. The file might not exist yet. The name can be specified using
  *            a C-style \c printf statement as described below.
  * \param[in] src_dset_name The path to the HDF5 dataset in the file specified by
@@ -7103,14 +7101,14 @@ H5_DLL herr_t H5Pset_szip(hid_t plist_id, unsigned options_mask, unsigned pixels
  *      treated as literals except for the following substitutions:
  *      <table>
  *      <tr>
- *      <td>\TText{"%%"}</td>
- *      <td>Replaced with a single \TText{"%"} (percent) character.</td>
+ *      <td>\TText{%%}</td>
+ *      <td>Replaced with a single \TText{%} (percent) character.</td>
  *      </tr>
  *      <tr>
- *      <td><code>"%<d>b"</code></td>
- *      <td>Where <code>"<d>"</code> is the virtual dataset dimension axis (0-based)
- *          and \TText{"b"} indicates that the block count of the selection in that
- *          dimension should be used. The full expression (for example, \TText{"%0b"})
+ *      <td><code>%\<d\>b</code></td>
+ *      <td>Where <code>\<d\></code> is the virtual dataset dimension axis (0-based)
+ *          and \TText{b} indicates that the block count of the selection in that
+ *          dimension should be used. The full expression (for example, \TText{%0b})
  *          is replaced with a single numeric value when the mapping is evaluated at
  *          VDS access time. Example code for many source and virtual dataset mappings
  *          is available in the "Examples of Source to Virtual Dataset Mapping"
@@ -7123,11 +7121,21 @@ H5_DLL herr_t H5Pset_szip(hid_t plist_id, unsigned options_mask, unsigned pixels
  *      If the printf form is used for the source file or dataset names, the
  *      selection in the source dataset's dataspace must be fixed-size.
  *
+ *      If the family driver is used for the source files of a \c printf
+ *      mapping, special care must be taken. In this case the VDS code expands
+ *      the file name with \c snprintf first, then the family driver second. This
+ *      means that, while the format specifier for the VDS block number is
+ *      inserted normally, the format specifier for the family file driver
+ *      member number must be escaped such that it is only recognized as a
+ *      format specifier the second time it is run through \c snprintf. As an
+ *      example one may use \TText{%%06d} as the member file number format
+ *      specifier in the source file name.
+ *
  * \par Source File Resolutions:
  *      When a source dataset residing in a different file is accessed, the
  *      library will search for the source file \p src_file_name as described
  *      below:
- *      \li If \p src_file_name is a \TText{"."} (period) then it refers to the
+ *      \li If \p src_file_name is a \TText{.} (period) then it refers to the
  *          file containing the virtual dataset.
  *      \li If \p src_file_name is a relative pathname, the following steps are
  *          performed:
@@ -7488,7 +7496,7 @@ H5_DLL herr_t H5Pset_append_flush(hid_t dapl_id, unsigned ndims, const hsize_t b
  *                        this dataset. In most cases increasing this
  *                        number will improve performance, as long as
  *                        you have enough free memory.
- *                        The default size is 1 MB. If the value passed is
+ *                        The default size is 8 MiB. If the value passed is
  *                        #H5D_CHUNK_CACHE_NBYTES_DEFAULT, then the
  *                        property will not be set on \p dapl_id and the
  *                        parameter will come from the file access
@@ -7543,7 +7551,7 @@ H5_DLL herr_t H5Pset_append_flush(hid_t dapl_id, unsigned ndims, const hsize_t b
  *
  *      \b Example \b Usage: The following code sets the chunk cache to
  *       use a hash table with 12421 elements and a maximum size of
- *       16 MB, while using the preemption policy specified for the
+ *       16 MiB, while using the preemption policy specified for the
  *       entire file:
  *       \TText{
  *       H5Pset_chunk_cache(dapl_id, 12421, 16*1024*1024,
@@ -7570,7 +7578,7 @@ H5_DLL herr_t H5Pset_append_flush(hid_t dapl_id, unsigned ndims, const hsize_t b
  *       set by H5Pset_chunk_cache().
  *
  *       In the absence of any cache settings, H5Dopen() will
- *       by default create a 1 MB chunk cache for the opened
+ *       by default create an 8 MiB chunk cache for the opened
  *       dataset. If this size happens to be appropriate, no
  *       call will be needed to either function to set the
  *       chunk cache size.
@@ -8210,7 +8218,7 @@ H5_DLL herr_t H5Pset_hyper_vector_size(hid_t plist_id, size_t size);
  * \version 1.8.2 Deprecated.
  *
  */
-H5_DLL herr_t H5Pset_preserve(hid_t plist_id, hbool_t status);
+H5_DLL herr_t H5Pset_preserve(hid_t plist_id, bool status);
 
 /**
  * \ingroup DXPL
@@ -8234,6 +8242,8 @@ H5_DLL herr_t H5Pset_preserve(hid_t plist_id, hbool_t status);
  *          take when there is an exception during datatype conversion. The
  *          function prototype is as follows:
  *          \snippet H5Tpublic.h H5T_conv_except_func_t_snip
+ *
+ * \callback_note
  *
  * \since 1.8.0
  *
@@ -8677,7 +8687,7 @@ H5_DLL herr_t H5Pget_actual_selection_io_mode(hid_t plist_id, uint32_t *actual_s
  * \since 1.14.1
  *
  */
-H5_DLL herr_t H5Pset_modify_write_buf(hid_t plist_id, hbool_t modify_write_buf);
+H5_DLL herr_t H5Pset_modify_write_buf(hid_t plist_id, bool modify_write_buf);
 
 /**
  *
@@ -8699,7 +8709,7 @@ H5_DLL herr_t H5Pset_modify_write_buf(hid_t plist_id, hbool_t modify_write_buf);
  * \since 1.14.1
  *
  */
-H5_DLL herr_t H5Pget_modify_write_buf(hid_t plist_id, hbool_t *modify_write_buf);
+H5_DLL herr_t H5Pget_modify_write_buf(hid_t plist_id, bool *modify_write_buf);
 
 /**
  * \ingroup LCPL
@@ -8776,7 +8786,7 @@ H5_DLL herr_t H5Pset_create_intermediate_group(hid_t plist_id, unsigned crt_intm
  *          The estimated average length of the anticipated link names is returned
  *          in \p est_name_len. The limit for \p est_name_len is 64 K.
  *
- *          See \ref_group_impls for a discussion of the available types of HDF5
+ *          See \ref H5G for a discussion of the available types of HDF5
  *          group structures.
  *
  * \since 1.8.0
@@ -8895,7 +8905,7 @@ H5_DLL herr_t H5Pget_local_heap_size_hint(hid_t plist_id, size_t *size_hint /*ou
  *          The values for these two settings are multiplied to compute the
  *          initial local heap size (for old-style groups, if the local heap
  *          size hint is not set) or the initial object header size for
- *          (new-style compact groups; see \ref_group_impls). Accurately setting
+ *          (new-style compact groups; see \ref H5G). Accurately setting
  *          these parameters will help reduce wasted file space.
  *
  *          If a group is expected to have many links and to be stored in dense
@@ -8903,7 +8913,7 @@ H5_DLL herr_t H5Pget_local_heap_size_hint(hid_t plist_id, size_t *size_hint /*ou
  *          efficiency. This will prevent the group from being created in the
  *          compact format.
  *
- *          See \ref_group_impls for a discussion of the available types of HDF5
+ *          See \ref H5G for a discussion of the available types of HDF5
  *          group structures.
  *
  * \since 1.8.0
@@ -9039,8 +9049,8 @@ H5_DLL herr_t H5Pset_link_phase_change(hid_t plist_id, unsigned max_compact, uns
  *      must be created and maintained in the original style. This is HDF5's default
  *      behavior. If backward compatibility with pre-1.8.0 libraries is not a concern,
  *      greater efficiencies can be obtained with the new-format compact and indexed
- *      groups. See <a href="https://\DOXURL/group___h5_g.html">Group
- *      implementations in HDF5</a> in the \ref H5G API introduction (at the bottom).\n
+ *      groups. See the \Bold{Group implementations in HDF5:} in the
+ *      \ref H5G API introduction (at the bottom).\n
  *      H5Pset_local_heap_size_hint() is useful for tuning file size when files
  *      contain original-style groups with either zero members or very large
  *      numbers of members.\n
@@ -9652,7 +9662,7 @@ H5_DLL herr_t H5Pset_nlinks(hid_t plist_id, size_t nlinks);
  *    \li H5Pget_mcdt_search_cb()
  *    \li H5Pset_copy_object()
  *    \li H5Pset_mcdt_search_cb()
- *    \li \ref_h5ocopy
+ *    \li \ref copying_committed
  *
  * \since 1.8.9
  *
@@ -9766,7 +9776,7 @@ H5_DLL herr_t H5Pget_copy_object(hid_t plist_id, unsigned *copy_options /*out*/)
  *    \li H5Pget_mcdt_search_cb()
  *    \li H5Pset_copy_object()
  *    \li H5Pset_mcdt_search_cb()
- *    \li \ref_h5ocopy
+ *    \li \ref copying_committed
  *
  * \since 1.8.9
  *
@@ -9857,7 +9867,7 @@ H5_DLL herr_t H5Pget_mcdt_search_cb(hid_t plist_id, H5O_mcdt_search_cb_t *func, 
  *    \li H5Pget_mcdt_search_cb()
  *    \li H5Pset_copy_object()
  *    \li H5Pset_mcdt_search_cb()
- *    \li \ref_h5ocopy
+ *    \li \ref copying_committed
  *
  * \version 1.8.9 #H5O_COPY_MERGE_COMMITTED_DTYPE_FLAG added in this release.
  *
@@ -9944,7 +9954,7 @@ H5_DLL herr_t H5Pset_copy_object(hid_t plist_id, unsigned copy_options);
  *    \li H5Pget_mcdt_search_cb()
  *    \li H5Pset_copy_object()
  *    \li H5Pset_mcdt_search_cb()
- *    \li \ref_h5ocopy
+ *    \li \ref copying_committed
  *
  * \since 1.8.9
  *

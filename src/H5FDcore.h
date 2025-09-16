@@ -22,7 +22,7 @@
 /** ID for the core VFD */
 #define H5FD_CORE (H5OPEN H5FD_CORE_id_g)
 
-/** Identifier for the core VFD */
+/** Identifier for the core VFD \since 1.14.0 */
 #define H5FD_CORE_VALUE H5_VFD_CORE
 
 #ifdef __cplusplus
@@ -78,7 +78,7 @@ H5_DLLVAR hid_t H5FD_CORE_id_g;
  * \since 1.4.0
  *
  */
-H5_DLL herr_t H5Pset_fapl_core(hid_t fapl_id, size_t increment, hbool_t backing_store);
+H5_DLL herr_t H5Pset_fapl_core(hid_t fapl_id, size_t increment, bool backing_store);
 
 /**
  * \ingroup FAPL
@@ -97,7 +97,7 @@ H5_DLL herr_t H5Pset_fapl_core(hid_t fapl_id, size_t increment, hbool_t backing_
  * \since 1.4.0
  *
  */
-H5_DLL herr_t H5Pget_fapl_core(hid_t fapl_id, size_t *increment /*out*/, hbool_t *backing_store /*out*/);
+H5_DLL herr_t H5Pget_fapl_core(hid_t fapl_id, size_t *increment /*out*/, bool *backing_store /*out*/);
 #ifdef __cplusplus
 }
 #endif

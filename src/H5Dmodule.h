@@ -28,6 +28,9 @@
 
 /** \page H5D_UG HDF5 Datasets
  *
+ * Navigate back: \ref index "Main" / \ref UG
+ * <hr>
+ *
  * \section sec_dataset HDF5 Datasets
  *
  * \subsection subsec_dataset_intro Introduction
@@ -814,7 +817,7 @@
  *
  * The HDF5 library distribution includes or employs several optional filters. These are listed in the
  * table below. The filters are applied in the pipeline between the virtual file layer and the file
- * hyperslab operation. See the figure above. The application can use any number of filters in any
+ * hyperslab operation. See the figure above. The application can use any number of filters up to 32, in any
  * order.
  *
  * <table>
@@ -852,7 +855,7 @@
  * <tr>
  * <td>szip compression</td>
  * <td>Data compression using the szip library. The HDF Group now uses the libaec library for the szip
-filter.</td>
+ *     filter.</td>
  * </tr>
  * </table>
  *
@@ -881,7 +884,8 @@ filter.</td>
  * HDF5 Library that has the new filter as a part of the library.
  *
  * If a user of such data does not have a modified HDF5 Library installed on his system, command-line tools
- * such as h5dump or h5ls will not be able to display the compressed data. Furthermore, it would be
+ * such as \ref sec_cltools_h5dump or \ref sec_cltools_h5ls will not be able to display the compressed data.
+ * Furthermore, it would be
  * practically impossible to determine the compression method used, making the data stored in HDF5
  * useless.
  *
@@ -1088,9 +1092,9 @@ filter.</td>
  *
  * \subsection subsec_dataset_allocation Allocation of Space in the File
  * When a dataset is created, space is allocated in the file for its header and initial data. The amount
-of space allocated when the dataset is created depends on the storage properties. When the
-dataset is modified (data is written, attributes added, or other changes), additional storage may be
-allocated if necessary.
+ * of space allocated when the dataset is created depends on the storage properties. When the
+ * dataset is modified (data is written, attributes added, or other changes), additional storage may be
+ * allocated if necessary.
  *
  * <table>
  * <caption>Initial dataset size</caption>
@@ -1474,12 +1478,13 @@ allocated if necessary.
  * reclaim the storage space occupied by a deleted object.
  *
  * Removing a dataset and reclaiming the space it used can be done with the #H5Ldelete function
- * and the h5repack utility program. With the H5Ldelete function, links to a dataset can be removed
+ * and the \ref sec_cltools_h5repack utility program. With the H5Ldelete function, links to a dataset can be
+ * removed
  * from the file structure. After all the links have been removed, the dataset becomes inaccessible to
  * any application and is effectively removed from the file. The way to recover the space occupied
  * by an unlinked dataset is to write all of the objects of the file into a new file. Any unlinked object
  * is inaccessible to the application and will not be included in the new file. Writing objects to a
- * new file can be done with a custom program or with the h5repack utility program.
+ * new file can be done with a custom program or with the \ref sec_cltools_h5repack utility program.
  *
  * For more information, @see @ref sec_group
  *
@@ -2838,7 +2843,7 @@ allocated if necessary.
  * \endcode
  *
  * Details of the required and optional parameters are provided in the H5Pset_szip entry
- * in the HDF5 Reference Manual.
+ * in the \ref RM.
  *
  * Software distribution: Starting with Release 1.6.0, HDF5 has been distributed with Szip enabled,
  * making it easier to use Szip compression. The software is distributed as follows:
@@ -2865,6 +2870,9 @@ allocated if necessary.
  * </table>
  *
  * Previous Chapter \ref sec_group - Next Chapter \ref sec_datatype
+ *
+ * <hr>
+ * Navigate back: \ref index "Main" / \ref UG
  *
  */
 

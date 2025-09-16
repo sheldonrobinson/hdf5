@@ -1508,10 +1508,12 @@ error:
 static int
 compare_groups(hid_t gid, hid_t gid2, hid_t pid, int depth, unsigned copy_flags)
 {
-    H5G_info_t ginfo;     /* Group info struct */
-    H5G_info_t ginfo2;    /* Group info struct */
-    hsize_t    idx;       /* Index over the objects in group */
-    unsigned   cpy_flags; /* Object copy flags */
+    H5G_info_t ginfo;                  /* Group info struct */
+    H5G_info_t ginfo2;                 /* Group info struct */
+    hsize_t    idx;                    /* Index over the objects in group */
+    unsigned   cpy_flags;              /* Object copy flags */
+    hid_t      oid  = H5I_INVALID_HID; /* IDs of objects within group */
+    hid_t      oid2 = H5I_INVALID_HID;
 
     /* Retrieve the object copy flags from the property list, if it's non-DEFAULT */
     if (pid != H5P_DEFAULT) {
@@ -1564,7 +1566,6 @@ compare_groups(hid_t gid, hid_t gid2, hid_t pid, int depth, unsigned copy_flags)
 
             /* Extra checks for "real" objects */
             if (linfo.type == H5L_TYPE_HARD) {
-                hid_t             oid, oid2;     /* IDs of objects within group */
                 H5O_info2_t       oinfo, oinfo2; /* Data model object info */
                 H5O_native_info_t ninfo, ninfo2; /* Native file format object info */
 
@@ -1637,20 +1638,23 @@ compare_groups(hid_t gid, hid_t gid2, hid_t pid, int depth, unsigned copy_flags)
                          * our usual attributes and fall-through comments don't
                          * quiet the compiler.
                          */
-                        H5_CLANG_DIAG_OFF("implicit-fallthrough")
+                        H5_WARN_IMPLICIT_FALLTHROUGH_OFF
                     case H5O_TYPE_UNKNOWN:
                     case H5O_TYPE_NTYPES:
                     default:
                         assert(0 && "Unknown type of object");
                         break;
-                        H5_CLANG_DIAG_ON("implicit-fallthrough")
+                        H5_WARN_IMPLICIT_FALLTHROUGH_ON
                 } /* end switch */
 
                 /* Close objects */
                 if (H5Oclose(oid) < 0)
                     TEST_ERROR;
+                oid = H5I_INVALID_HID;
+
                 if (H5Oclose(oid2) < 0)
                     TEST_ERROR;
+                oid2 = H5I_INVALID_HID;
             } /* end if */
             else {
                 /* Check that both links are the same size */
@@ -1691,6 +1695,8 @@ compare_groups(hid_t gid, hid_t gid2, hid_t pid, int depth, unsigned copy_flags)
 error:
     H5E_BEGIN_TRY
     {
+        H5Oclose(oid);
+        H5Oclose(oid2);
     }
     H5E_END_TRY
     return false;
@@ -8816,6 +8822,7 @@ error:
         H5Gclose(gid);
         H5Fclose(fid_dst);
         H5Fclose(fid_src);
+        H5Fclose(fid_ext);
     }
     H5E_END_TRY
     return 1;
@@ -17092,6 +17099,8 @@ error:
     {
         H5Dclose(did);
         H5Dclose(did2);
+        H5Dclose(did3);
+        H5Dclose(did4);
         H5Sclose(sid);
         H5Gclose(gid);
         H5Gclose(gid2);

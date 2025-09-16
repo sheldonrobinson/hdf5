@@ -22,25 +22,25 @@
 /** ID for the onion VFD */
 #define H5FD_ONION (H5OPEN H5FD_ONION_id_g)
 
-/** Identifier for the onion VFD */
+/** Identifier for the onion VFD \since 1.14.0 */
 #define H5FD_ONION_VALUE H5_VFD_ONION
 
 /** Current version of the onion VFD fapl info struct */
 #define H5FD_ONION_FAPL_INFO_VERSION_CURR 1
 
-#define H5FD_ONION_FAPL_INFO_CREATE_FLAG_ENABLE_PAGE_ALIGNMENT                                               \
-    (0x0001u) /**<                                                                                           \
-               * Onion history metadata will align to page_size.                                             \
-               * Partial pages of unused space will occur in the file,                                       \
-               * but may improve read performance from the backing store                                     \
-               * on some systems.                                                                            \
-               * If disabled (0), padding will not be inserted to align                                      \
-               * to page boundaries.                                                                         \
-               */
+/**
+ * Onion history metadata will align to page_size.
+ * Partial pages of unused space will occur in the file, but may improve read
+ * performance from the backing store on some systems.
+ * If disabled (0), padding will not be inserted to align to page boundaries.
+ * \since 1.14.0
+ */
+#define H5FD_ONION_FAPL_INFO_CREATE_FLAG_ENABLE_PAGE_ALIGNMENT (0x0001u)
 
 /**
  * Max length of a comment.
  * The buffer is defined to be this size + 1 to handle the NUL.
+ * \since 1.14.0
  */
 #define H5FD_ONION_FAPL_INFO_COMMENT_MAX_LEN 255
 
@@ -162,7 +162,7 @@ H5_DLL herr_t H5Pset_fapl_onion(hid_t fapl_id, const H5FD_onion_fapl_info_t *fa)
 
 /**
  * --------------------------------------------------------------------------
- * \ingroup H5FD
+ * \ingroup H5VFD
  *
  * \brief get the number of revisions
  *
