@@ -1,4 +1,10 @@
-cmake_minimum_required (VERSION 3.18)
+#-----------------------------------------------------------------------------
+# CMake configuration for HDF5 test library and test executables
+# This file sets up the build, formatting, and installation rules for the HDF5 test library (static/shared),
+# test plugins, and all test executables. It handles source/header definitions, compiler options, linking,
+# export, and test configuration for the HDF5 test suite, including plugin, VFD, VOL, SWMR, and use case tests.
+#-----------------------------------------------------------------------------
+cmake_minimum_required (VERSION 3.26)
 project (HDF5_TEST C)
 
 #-----------------------------------------------------------------------------
@@ -413,8 +419,6 @@ set (H5_TESTS
     enc_dec_plist_cross_platform
     getname
     vfd
-    ros3
-    s3comms
     hdfs
     #mirror_vfd # multiple source
     ntypes
@@ -437,6 +441,12 @@ set (H5_TESTS
     event_set
     onion
 )
+
+set (H5_S3TESTS
+    ros3
+    s3comms
+)
+
 if (HDF5_BUILD_UTILS)
   set (H5_TESTS ${H5_TESTS} mirror_vfd)
 endif ()
@@ -472,7 +482,7 @@ set (H5_TESTS_MULTIPLE
     mirror_vfd
 )
 # Only build single source tests here
-foreach (h5_test ${H5_TESTS} ${H5_EXPRESS_TESTS})
+foreach (h5_test ${H5_TESTS} ${H5_EXPRESS_TESTS} ${H5_S3TESTS})
   if (NOT h5_test IN_LIST H5_TESTS_MULTIPLE)
     ADD_H5_EXE(${h5_test})
   endif ()
@@ -511,7 +521,7 @@ endif ()
 
 #-- Adding test for direct_chunk
 if (H5_ZLIB_HEADER)
-  message(STATUS "H5_ZLIB_HEADER=${H5_ZLIB_HEADER}")
+  message(VERBOSE "H5_ZLIB_HEADER for direct_chunk=${H5_ZLIB_HEADER}")
 
   set_source_files_properties(${HDF5_TEST_SOURCE_DIR}/direct_chunk.c
                PROPERTIES COMPILE_DEFINITIONS H5_ZLIB_HEADER="${H5_ZLIB_HEADER}"

@@ -223,7 +223,7 @@ H5Pset_fapl_sec2(hid_t fapl_id)
 
     FUNC_ENTER_API(FAIL)
 
-    if (NULL == (plist = H5P_object_verify(fapl_id, H5P_FILE_ACCESS)))
+    if (NULL == (plist = H5P_object_verify(fapl_id, H5P_FILE_ACCESS, false)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a file access property list");
 
     ret_value = H5P_set_driver(plist, H5FD_SEC2, NULL, NULL);
@@ -431,22 +431,12 @@ H5FD__sec2_cmp(const H5FD_t *_f1, const H5FD_t *_f2)
         HGOTO_DONE(-1);
     if (f1->nFileIndexLow > f2->nFileIndexLow)
         HGOTO_DONE(1);
-#else /* H5_HAVE_WIN32_API */
-#ifdef H5_DEV_T_IS_SCALAR
+#else  /* H5_HAVE_WIN32_API */
     if (f1->device < f2->device)
         HGOTO_DONE(-1);
     if (f1->device > f2->device)
         HGOTO_DONE(1);
-#else  /* H5_DEV_T_IS_SCALAR */
-    /* If dev_t isn't a scalar value on this system, just use memcmp to
-     * determine if the values are the same or not.  The actual return value
-     * shouldn't really matter...
-     */
-    if (memcmp(&(f1->device), &(f2->device), sizeof(dev_t)) < 0)
-        HGOTO_DONE(-1);
-    if (memcmp(&(f1->device), &(f2->device), sizeof(dev_t)) > 0)
-        HGOTO_DONE(1);
-#endif /* H5_DEV_T_IS_SCALAR */
+
     if (f1->inode < f2->inode)
         HGOTO_DONE(-1);
     if (f1->inode > f2->inode)

@@ -483,7 +483,7 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5D__chunk_direct_read(const H5D_t *dset, hsize_t *offset, uint32_t *filters, void *buf)
+H5D__chunk_direct_read(const H5D_t *dset, hsize_t *offset, uint32_t *filters, void *buf, size_t *nalloc)
 {
     const H5O_layout_t *layout = &(dset->shared->layout);      /* Dataset layout */
     const H5D_rdcc_t   *rdcc   = &(dset->shared->cache.chunk); /* raw data chunk cache */
@@ -497,7 +497,7 @@ H5D__chunk_direct_read(const H5D_t *dset, hsize_t *offset, uint32_t *filters, vo
     assert(dset && H5D_CHUNKED == layout->type);
     assert(offset);
     assert(filters);
-    assert(buf);
+    assert(buf || nalloc);
 
     *filters = 0;
 
@@ -553,10 +553,18 @@ H5D__chunk_direct_read(const H5D_t *dset, hsize_t *offset, uint32_t *filters, vo
     if (!H5_addr_defined(udata.chunk_block.offset))
         HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, FAIL, "chunk address isn't defined");
 
-    /* Read the chunk data into the supplied buffer */
-    if (H5F_shared_block_read(H5F_SHARED(dset->oloc.file), H5FD_MEM_DRAW, udata.chunk_block.offset,
-                              udata.chunk_block.length, buf) < 0)
-        HGOTO_ERROR(H5E_IO, H5E_READERROR, FAIL, "unable to read raw data chunk");
+    /* If nalloc is provided, check if *nalloc is large enough.  If not provided, assume it is large enough
+     * (this is the insecure older behaviour that is disallowed by H5Dread_chunk2(), but we must support it
+     * here for the deprecated H5Dreach_chunk1()). */
+    if (udata.chunk_block.length > 0 && buf && (!nalloc || *nalloc >= udata.chunk_block.length))
+        /* Read the chunk data into the supplied buffer */
+        if (H5F_shared_block_read(H5F_SHARED(dset->oloc.file), H5FD_MEM_DRAW, udata.chunk_block.offset,
+                                  udata.chunk_block.length, buf) < 0)
+            HGOTO_ERROR(H5E_IO, H5E_READERROR, FAIL, "unable to read raw data chunk");
+
+    /* Return the size of the chunk block in *nalloc if nalloc is provided */
+    if (nalloc)
+        *nalloc = udata.chunk_block.length;
 
     /* Return the filter mask */
     *filters = udata.filter_mask;
@@ -763,9 +771,7 @@ H5D__chunk_set_sizes(H5D_t *dset)
 
     /* Sanity checks */
     assert(dset);
-
-    /* Increment # of chunk dimensions, to account for datatype size as last element */
-    dset->shared->layout.u.chunk.ndims++;
+    assert(dset->shared->layout.u.chunk.ndims > 0);
 
     /* Set the last dimension of the chunk size to the size of the datatype */
     dset->shared->layout.u.chunk.dim[dset->shared->layout.u.chunk.ndims - 1] =
@@ -829,6 +835,9 @@ H5D__chunk_construct(H5F_t H5_ATTR_UNUSED *f, H5D_t *dset)
         HGOTO_ERROR(H5E_DATASET, H5E_BADVALUE, FAIL, "no chunk information set?");
     if (dset->shared->layout.u.chunk.ndims != dset->shared->ndims)
         HGOTO_ERROR(H5E_DATASET, H5E_BADVALUE, FAIL, "dimensionality of chunks doesn't match the dataspace");
+
+    /* Increment # of chunk dimensions, to account for datatype size as last element */
+    dset->shared->layout.u.chunk.ndims++;
 
     /* Set chunk sizes */
     if (H5D__chunk_set_sizes(dset) < 0)
@@ -1436,7 +1445,11 @@ H5D__chunk_mem_xfree(void *chk, const void *pline)
 void
 H5D__chunk_mem_free(void *chk, void *pline)
 {
-    (void)H5D__chunk_mem_xfree(chk, pline);
+    FUNC_ENTER_PACKAGE_NAMECHECK_ONLY
+
+    H5D__chunk_mem_xfree(chk, pline);
+
+    FUNC_LEAVE_NOAPI_VOID_NAMECHECK_ONLY
 }
 
 /*-------------------------------------------------------------------------
@@ -5025,7 +5038,7 @@ H5D__chunk_allocate(const H5D_t *dset, bool full_overwrite, const hsize_t old_di
         fill_buf = &fb_info.fill_buf;
 
         /* Check if there are filters which need to be applied to the chunk */
-        /* (only do this in advance when the chunk info can be re-used (i.e.
+        /* (only do this in advance when the chunk info can be reused (i.e.
          *      it doesn't contain any non-default VL datatype fill values)
          */
         if (!fb_info.has_vlen_fill_type && pline->nused > 0) {
@@ -8134,16 +8147,23 @@ H5D__chunk_iter_cb(const H5D_chunk_rec_t *chunk_rec, void *udata)
     hsize_t                    offset[H5O_LAYOUT_NDIMS];
     int                        ret_value = H5_ITER_CONT;
 
+    FUNC_ENTER_PACKAGE_NOERR
+
     /* Similar to H5D__get_chunk_info */
     for (unsigned i = 0; i < chunk->ndims; i++)
         offset[i] = chunk_rec->scaled[i] * chunk->dim[i];
 
-    FUNC_ENTER_PACKAGE_NOERR
+    /* Prepare & restore library for user callback */
+    H5_BEFORE_USER_CB_NOERR(FAIL)
+        {
+            ret_value =
+                (data->op)(offset, (unsigned)chunk_rec->filter_mask, data->base_addr + chunk_rec->chunk_addr,
+                           (hsize_t)chunk_rec->nbytes, data->op_data);
+        }
+    H5_AFTER_USER_CB_NOERR(FAIL)
 
     /* Check for callback failure and pass along return value */
-    if ((ret_value =
-             (data->op)(offset, (unsigned)chunk_rec->filter_mask, data->base_addr + chunk_rec->chunk_addr,
-                        (hsize_t)chunk_rec->nbytes, data->op_data)) < 0)
+    if (ret_value < 0)
         HERROR(H5E_DATASET, H5E_CANTNEXT, "iteration operator failed");
 
     FUNC_LEAVE_NOAPI(ret_value)

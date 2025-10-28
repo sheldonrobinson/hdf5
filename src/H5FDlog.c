@@ -270,7 +270,7 @@ H5Pset_fapl_log(hid_t fapl_id, const char *logfile, unsigned long long flags, si
     memset(&fa, 0, sizeof(H5FD_log_fapl_t));
 
     /* Check arguments */
-    if (NULL == (plist = H5P_object_verify(fapl_id, H5P_FILE_ACCESS)))
+    if (NULL == (plist = H5P_object_verify(fapl_id, H5P_FILE_ACCESS, false)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a file access property list");
 
     /* Duplicate the log file string
@@ -446,7 +446,7 @@ H5FD__log_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t maxaddr)
         o_flags |= O_EXCL;
 
     /* Get the driver specific information */
-    if (NULL == (plist = H5P_object_verify(fapl_id, H5P_FILE_ACCESS)))
+    if (NULL == (plist = H5P_object_verify(fapl_id, H5P_FILE_ACCESS, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, NULL, "not a file access property list");
     if (NULL == (fa = (const H5FD_log_fapl_t *)H5P_peek_driver_info(plist))) {
         /* Use default driver configuration*/
@@ -786,21 +786,10 @@ H5FD__log_cmp(const H5FD_t *_f1, const H5FD_t *_f2)
     if (f1->nFileIndexLow > f2->nFileIndexLow)
         HGOTO_DONE(1);
 #else
-#ifdef H5_DEV_T_IS_SCALAR
     if (f1->device < f2->device)
         HGOTO_DONE(-1);
     if (f1->device > f2->device)
         HGOTO_DONE(1);
-#else  /* H5_DEV_T_IS_SCALAR */
-    /* If dev_t isn't a scalar value on this system, just use memcmp to
-     * determine if the values are the same or not.  The actual return value
-     * shouldn't really matter...
-     */
-    if (memcmp(&(f1->device), &(f2->device), sizeof(dev_t)) < 0)
-        HGOTO_DONE(-1);
-    if (memcmp(&(f1->device), &(f2->device), sizeof(dev_t)) > 0)
-        HGOTO_DONE(1);
-#endif /* H5_DEV_T_IS_SCALAR */
 
     if (f1->inode < f2->inode)
         HGOTO_DONE(-1);

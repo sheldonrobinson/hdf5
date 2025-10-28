@@ -30,16 +30,10 @@
 /* Public Macros */
 /*****************/
 
-/**
- * \brief Maximum length of a link's name
- *
- * The maximum length of a link's name is encoded in a 32-bit unsigned integer.
- */
+/** Maximum length of a link's name \since 1.8.0 */
 #define H5L_MAX_LINK_NAME_LEN UINT32_MAX
 
-/**
- * \brief Macro to indicate operation occurs on same location
- */
+/** Macro to indicate operation occurs on same location \since 1.8.0 */
 #define H5L_SAME_LOC 0 /* (hid_t) */
 
 #ifdef __cplusplus
@@ -67,17 +61,12 @@ typedef enum {
     H5L_TYPE_EXTERNAL = 64,   /**< External link id             */
     H5L_TYPE_MAX      = 255   /**< Maximum link type id         */
 } H5L_type_t;
-/**
- * \brief  Maximum value link value for "built-in" link types
- */
+
+/** Maximum value link value for "built-in" link types \since 1.8.0 */
 #define H5L_TYPE_BUILTIN_MAX H5L_TYPE_SOFT
-/**
- * \brief Link ids at or above this value are "user-defined" link types.
- */
+/** Link ids at or above this value are "user-defined" link types. \since 1.8.0 */
 #define H5L_TYPE_UD_MIN H5L_TYPE_EXTERNAL
-/**
- * \brief Maximum link id value for "user-defined" link types.
- */
+/** Maximum link id value for "user-defined" link types. \since 1.12.1 */
 #define H5L_TYPE_UD_MAX H5L_TYPE_MAX
 
 /**
@@ -86,7 +75,7 @@ typedef enum {
 //! <!-- [H5L_info2_t_snip] -->
 typedef struct {
     H5L_type_t type;         /**< Type of link                   */
-    hbool_t    corder_valid; /**< Indicate if creation order is valid */
+    bool       corder_valid; /**< Indicate if creation order is valid */
     int64_t    corder;       /**< Creation order                 */
     H5T_cset_t cset;         /**< Character set of link name     */
     union {
@@ -675,9 +664,9 @@ H5_DLL htri_t H5Lexists(hid_t loc_id, const char *name, hid_t lapl_id);
  */
 #ifndef H5_DOXYGEN
 H5_DLL herr_t H5Lexists_async(const char *app_file, const char *app_func, unsigned app_line, hid_t loc_id,
-                              const char *name, hbool_t *exists, hid_t lapl_id, hid_t es_id);
+                              const char *name, bool *exists, hid_t lapl_id, hid_t es_id);
 #else
-H5_DLL herr_t H5Lexists_async(hid_t loc_id, const char *name, hbool_t *exists, hid_t lapl_id, hid_t es_id);
+H5_DLL herr_t H5Lexists_async(hid_t loc_id, const char *name, bool *exists, hid_t lapl_id, hid_t es_id);
 #endif
 /**
  * \ingroup H5L
@@ -1468,7 +1457,7 @@ H5_DLL herr_t H5Lcreate_external(const char *file_name, const char *obj_name, hi
  */
 typedef struct {
     H5L_type_t type;         /**< Type of link                   */
-    hbool_t    corder_valid; /**< Indicate if creation order is valid */
+    bool       corder_valid; /**< Indicate if creation order is valid */
     int64_t    corder;       /**< Creation order                 */
     H5T_cset_t cset;         /**< Character set of link name     */
     union {

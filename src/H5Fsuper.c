@@ -364,9 +364,9 @@ H5F__super_read(H5F_t *f, H5P_genplist_t *fa_plist, bool initial_read)
             /* Try detecting file's signature */
             /* (Don't leave before Bcast, to avoid hang on error) */
             H5E_PAUSE_ERRORS
-            {
-                H5FD_locate_signature(file, &super_addr);
-            }
+                {
+                    H5FD_locate_signature(file, &super_addr);
+                }
             H5E_RESUME_ERRORS
         } /* end if */
 
@@ -729,6 +729,8 @@ H5F__super_read(H5F_t *f, H5P_genplist_t *fa_plist, bool initial_read)
             /* If message is NOT marked "unknown"--set up file space info  */
             if (!(flags & H5O_MSG_FLAG_WAS_UNKNOWN)) {
                 H5O_fsinfo_t fsinfo; /* File space info message from superblock extension */
+
+                memset(&fsinfo, 0, sizeof(H5O_fsinfo_t));
 
                 /* f->shared->null_fsm_addr: Whether to drop free-space to the floor */
                 /* The h5clear tool uses this property to tell the library

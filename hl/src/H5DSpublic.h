@@ -32,6 +32,9 @@ extern "C" {
 
 /** \page H5DS_UG HDF5 High Level Dimension Scales
  *
+ * Navigate back: \ref index "Main" / \ref UG
+ * <hr>
+ *
  * \section sec_dim_scales_stand HDF5 Standard for Dimension Scales
  * Dimension scales are stored as datasets, with additional metadata indicating that they are to
  * be treated as dimension scales. Each dimension scale has an optional name. There is no requirement
@@ -204,10 +207,10 @@ extern "C" {
  *     extension of dimension scales when dataset dimensions are extended, so we suggest letting
  *     applications be responsible for this operation.
  * \li <strong>Automatically deleting dimension scales.</strong> Should a dimension scale be deleted
- *     when all datasets that use it have been deleted?  This is another case where different applications
- *     might have different requirements, so a general policy would be difficult to devise.  Furthermore,
+ *     when all datasets that use it have been deleted? This is another case where different applications
+ *     might have different requirements, so a general policy would be difficult to devise. Furthermore,
  *     enforcing a deletion policy, even a simple one, adds complexity to the library, and could also
- *     affect performance.  Deletion policies seem best left to applications.
+ *     affect performance. Deletion policies seem best left to applications.
  *
  * Section \ref sec_dim_scales_api presents an API and programming model that implements some of these
  * features. However, applications
@@ -235,7 +238,7 @@ extern "C" {
  * \li A storage profile
  * \li An API and programming model
  *
- * \subsection subsec_dim_scales_spec_store
+ * \subsection subsec_dim_scales_spec_store Storage Profile
  * This section specifies the storage profile for Dimension Scale objects and the association between
  * Dimensions and Dimension Scales.
  *
@@ -246,7 +249,7 @@ extern "C" {
  * See Appendix 2 for a discussion of how to store converted HDF4 objects. See Appendix 3 for a
  * discussion of netCDF4 issues. See Appendix 4 for a discussion of HDF-EOS5.
  *
- * \subsubsection subsubsec_dim_scales_spec_store_dset
+ * \subsubsection subsubsec_dim_scales_spec_store_dset Dimension Scale Dataset
  * A Dimension Scale dataset is stored as an HDF5 dataset. Table 1 summarizes the stored data, i.e.,
  * the values of the scale. There are no restrictions on the dataspace or datatype, or storage properties of
  * the dataset.
@@ -751,6 +754,12 @@ extern "C" {
  *  @see H5DS Reference Manual
  *
  * @todo Under Construction
+ *
+ * Previous Chapter \ref sec_hldo_direct_chunk - Next Chapter \ref sec_hl_images
+ *
+ * <hr>
+ * Navigate back: \ref index "Main" / \ref UG
+ *
  */
 
 /**\defgroup H5DS HDF5 Dimension Scales APIs (H5DS)
@@ -816,7 +825,7 @@ extern "C" {
  *           via configure option.
  *
  */
-H5_HLDLL herr_t H5DSwith_new_ref(hid_t obj_id, hbool_t *with_new_ref);
+H5HL_DLL herr_t H5DSwith_new_ref(hid_t obj_id, bool *with_new_ref);
 
 /**
  * --------------------------------------------------------------------------
@@ -835,9 +844,8 @@ H5_HLDLL herr_t H5DSwith_new_ref(hid_t obj_id, hbool_t *with_new_ref);
  *          dimension \p idx of dataset \p did.
  *
  *          Entries are created in the #DIMENSION_LIST and
- *          #REFERENCE_LIST attributes, as defined in section 4.2 of
- *          <a href="https://docs.hdfgroup.org/documentation/HDF5/HL/H5DS_Spec.pdf">
- *          HDF5 Dimension Scale Specification</a>.
+ *          #REFERENCE_LIST attributes, as defined in \ref subsec_dim_scales_spec_store section of
+ *          the \ref H5DS_UG.
  *
  *          Fails if:
  *          - Bad arguments
@@ -848,7 +856,7 @@ H5_HLDLL herr_t H5DSwith_new_ref(hid_t obj_id, hbool_t *with_new_ref);
  * \note The Dimension Scale \p dsid can be attached to the
  *       same dimension more than once, which has no effect.
  */
-H5_HLDLL herr_t H5DSattach_scale(hid_t did, hid_t dsid, unsigned int idx);
+H5HL_DLL herr_t H5DSattach_scale(hid_t did, hid_t dsid, unsigned int idx);
 
 /**
  * --------------------------------------------------------------------------
@@ -865,9 +873,8 @@ H5_HLDLL herr_t H5DSattach_scale(hid_t did, hid_t dsid, unsigned int idx);
  * \details If possible, deletes association of Dimension Scale \p dsid with
  *          dimension \p idx of dataset \p did. This deletes the entries in the
  *          #DIMENSION_LIST and #REFERENCE_LIST attributes,
- *          as defined in section 4.2 of
- *          <a href="https://support.hdfgroup.org/releases/hdf5/documentation/hdf5_topics/H5DS_Spec.pdf">
- *          HDF5 Dimension Scale Specification</a>.
+ *          as defined in \ref subsec_dim_scales_spec_store section of
+ *          the \ref H5DS_UG.
  *
  *          Fails if:
  *          - Bad arguments
@@ -880,7 +887,7 @@ H5_HLDLL herr_t H5DSattach_scale(hid_t did, hid_t dsid, unsigned int idx);
  *       of the associations, for \p did.
  *
  */
-H5_HLDLL herr_t H5DSdetach_scale(hid_t did, hid_t dsid, unsigned int idx);
+H5HL_DLL herr_t H5DSdetach_scale(hid_t did, hid_t dsid, unsigned int idx);
 
 /**
  * --------------------------------------------------------------------------
@@ -898,10 +905,8 @@ H5_HLDLL herr_t H5DSdetach_scale(hid_t did, hid_t dsid, unsigned int idx);
  * \details The dataset \p dsid is converted to a Dimension Scale dataset,
  *          as defined above. Creates the CLASS attribute, set to the value
  *          "DIMENSION_SCALE" and an empty #REFERENCE_LIST attribute,
- *          as described in
- *          <a href="https://support.hdfgroup.org/releases/hdf5/documentation/hdf5_topics/H5DS_Spec.pdf">
- *          HDF5 Dimension Scale Specification</a>.
- *          (PDF, see section 4.2).
+ *          as described in \ref subsec_dim_scales_spec_store section of
+ *          the \ref H5DS_UG.
  *
  *          If \p dimname is specified, then an attribute called NAME
  *          is created, with the value \p dimname.
@@ -917,7 +922,7 @@ H5_HLDLL herr_t H5DSdetach_scale(hid_t did, hid_t dsid, unsigned int idx);
  *
  * \todo what is [9] after Palette interface?
  */
-H5_HLDLL herr_t H5DSset_scale(hid_t dsid, const char *dimname);
+H5HL_DLL herr_t H5DSset_scale(hid_t dsid, const char *dimname);
 
 /**
  * --------------------------------------------------------------------------
@@ -938,7 +943,7 @@ H5_HLDLL herr_t H5DSset_scale(hid_t dsid, const char *dimname);
  *          dataset \p did.
  *
  */
-H5_HLDLL int H5DSget_num_scales(hid_t did, unsigned int idx);
+H5HL_DLL int H5DSget_num_scales(hid_t did, unsigned int idx);
 
 /**
  * --------------------------------------------------------------------------
@@ -961,7 +966,7 @@ H5_HLDLL int H5DSget_num_scales(hid_t did, unsigned int idx);
  *          - Bad arguments
  *
  */
-H5_HLDLL herr_t H5DSset_label(hid_t did, unsigned int idx, const char *label);
+H5HL_DLL herr_t H5DSset_label(hid_t did, unsigned int idx, const char *label);
 
 /**
  * --------------------------------------------------------------------------
@@ -991,7 +996,7 @@ H5_HLDLL herr_t H5DSset_label(hid_t did, unsigned int idx, const char *label);
  *          - Bad arguments
  *
  */
-H5_HLDLL ssize_t H5DSget_label(hid_t did, unsigned int idx, char *label, size_t size);
+H5HL_DLL ssize_t H5DSget_label(hid_t did, unsigned int idx, char *label, size_t size);
 
 /**
  * --------------------------------------------------------------------------
@@ -1025,7 +1030,7 @@ H5_HLDLL ssize_t H5DSget_label(hid_t did, unsigned int idx, char *label, size_t 
  *          passed back will contain the null terminator and the last character
  *          will be missing from the name passed back to the calling application.)
  */
-H5_HLDLL ssize_t H5DSget_scale_name(hid_t did, char *name, size_t size);
+H5HL_DLL ssize_t H5DSget_scale_name(hid_t did, char *name, size_t size);
 
 /**
  * --------------------------------------------------------------------------
@@ -1041,7 +1046,7 @@ H5_HLDLL ssize_t H5DSget_scale_name(hid_t did, char *name, size_t size);
  *          i.e., has class="DIMENSION_SCALE").
  *
  */
-H5_HLDLL htri_t H5DSis_scale(hid_t did);
+H5HL_DLL htri_t H5DSis_scale(hid_t did);
 
 /**
  * --------------------------------------------------------------------------
@@ -1097,7 +1102,7 @@ H5_HLDLL htri_t H5DSis_scale(hid_t did);
  *          the iteration. If the membership changes during the iteration,
  *          the function's behavior is undefined.
  */
-H5_HLDLL herr_t H5DSiterate_scales(hid_t did, unsigned int dim, int *idx, H5DS_iterate_t visitor,
+H5HL_DLL herr_t H5DSiterate_scales(hid_t did, unsigned int dim, int *idx, H5DS_iterate_t visitor,
                                    void *visitor_data);
 
 /**
@@ -1123,7 +1128,7 @@ H5_HLDLL herr_t H5DSiterate_scales(hid_t did, unsigned int dim, int *idx, H5DS_i
  *          - If \p did is a Dimension Scale (A Dimension Scale cannot have scales.)
  *
  */
-H5_HLDLL htri_t H5DSis_attached(hid_t did, hid_t dsid, unsigned int idx);
+H5HL_DLL htri_t H5DSis_attached(hid_t did, hid_t dsid, unsigned int idx);
 
 #ifdef __cplusplus
 }

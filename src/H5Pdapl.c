@@ -771,7 +771,7 @@ H5Pset_chunk_cache(hid_t dapl_id, size_t rdcc_nslots, size_t rdcc_nbytes, double
             "raw data cache w0 value must be between 0.0 and 1.0 inclusive, or H5D_CHUNK_CACHE_W0_DEFAULT");
 
     /* Get the plist structure */
-    if (NULL == (plist = H5P_object_verify(dapl_id, H5P_DATASET_ACCESS)))
+    if (NULL == (plist = H5P_object_verify(dapl_id, H5P_DATASET_ACCESS, false)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set sizes */
@@ -811,7 +811,7 @@ H5Pget_chunk_cache(hid_t dapl_id, size_t *rdcc_nslots /*out*/, size_t *rdcc_nbyt
     FUNC_ENTER_API(FAIL)
 
     /* Get the plist structure */
-    if (NULL == (plist = H5P_object_verify(dapl_id, H5P_DATASET_ACCESS)))
+    if (NULL == (plist = H5P_object_verify(dapl_id, H5P_DATASET_ACCESS, true)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get default file access plist */
@@ -951,7 +951,7 @@ H5P__decode_chunk_cache_nslots(const void **_pp, void *_value)
  *
  * Purpose:        Encode the rdcc_nbytes parameter to a serialized
  *                 property list.  Similar to H5P__encode_size_t except
- *                 the value of 255 for the enc_size field is reserved to
+ *                 the value of 0 for the enc_size field is reserved to
  *                 indicate H5D_ACS_DATA_CACHE_BYTE_SIZE_DEF, in which
  *                 nothing further is encoded.
  *
@@ -973,7 +973,7 @@ H5P__encode_chunk_cache_nbytes(const void *value, void **_pp, size_t *size)
     assert(size);
 
     /* Determine if this is the default value, in which case only encode
-     * enc_size (as 255).  Also set size needed for encoding. */
+     * enc_size (as 0).  Also set size needed for encoding. */
     if (*(const size_t *)value == H5D_ACS_DATA_CACHE_BYTE_SIZE_DEF) {
         enc_size = 0;
         *size += 1;
@@ -1005,7 +1005,7 @@ H5P__encode_chunk_cache_nbytes(const void *value, void **_pp, size_t *size)
  *
  * Purpose:        Decode the rdcc_nbytes parameter from a serialized
  *                 property list.  Similar to H5P__decode_size_t except
- *                 the value of 255 for the enc_size field is reserved to
+ *                 the value of 0 for the enc_size field is reserved to
  *                 indicate H5D_ACS_DATA_CACHE_BYTE_SIZE_DEF, in which
  *                 nothing further needs to be decoded.
  *
@@ -1076,7 +1076,7 @@ H5Pset_virtual_view(hid_t plist_id, H5D_vds_view_t view)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "not a valid bounds option");
 
     /* Get the plist structure */
-    if (NULL == (plist = H5P_object_verify(plist_id, H5P_DATASET_ACCESS)))
+    if (NULL == (plist = H5P_object_verify(plist_id, H5P_DATASET_ACCESS, false)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Update property list */
@@ -1107,7 +1107,7 @@ H5Pget_virtual_view(hid_t plist_id, H5D_vds_view_t *view /*out*/)
     FUNC_ENTER_API(FAIL)
 
     /* Get the plist structure */
-    if (NULL == (plist = H5P_object_verify(plist_id, H5P_DATASET_ACCESS)))
+    if (NULL == (plist = H5P_object_verify(plist_id, H5P_DATASET_ACCESS, true)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get value from property list */
@@ -1216,7 +1216,7 @@ H5Pset_virtual_printf_gap(hid_t plist_id, hsize_t gap_size)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "not a valid printf gap size");
 
     /* Get the plist structure */
-    if (NULL == (plist = H5P_object_verify(plist_id, H5P_DATASET_ACCESS)))
+    if (NULL == (plist = H5P_object_verify(plist_id, H5P_DATASET_ACCESS, false)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Update property list */
@@ -1248,7 +1248,7 @@ H5Pget_virtual_printf_gap(hid_t plist_id, hsize_t *gap_size /*out*/)
     FUNC_ENTER_API(FAIL)
 
     /* Get the plist structure */
-    if (NULL == (plist = H5P_object_verify(plist_id, H5P_DATASET_ACCESS)))
+    if (NULL == (plist = H5P_object_verify(plist_id, H5P_DATASET_ACCESS, true)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get value from property list */
@@ -1300,7 +1300,7 @@ H5Pset_append_flush(hid_t plist_id, unsigned ndims, const hsize_t *boundary, H5D
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "callback is NULL while user data is not");
 
     /* Get the plist structure */
-    if (NULL == (plist = H5P_object_verify(plist_id, H5P_DATASET_ACCESS)))
+    if (NULL == (plist = H5P_object_verify(plist_id, H5P_DATASET_ACCESS, false)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set up values */
@@ -1348,7 +1348,7 @@ H5Pget_append_flush(hid_t plist_id, unsigned ndims, hsize_t boundary[], H5D_appe
     FUNC_ENTER_API(FAIL)
 
     /* Get the plist structure */
-    if (NULL == (plist = H5P_object_verify(plist_id, H5P_DATASET_ACCESS)))
+    if (NULL == (plist = H5P_object_verify(plist_id, H5P_DATASET_ACCESS, true)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Retrieve info for append flush */
@@ -1397,7 +1397,7 @@ H5Pset_efile_prefix(hid_t plist_id, const char *prefix)
     FUNC_ENTER_API(FAIL)
 
     /* Get the plist structure */
-    if (NULL == (plist = H5P_object_verify(plist_id, H5P_DATASET_ACCESS)))
+    if (NULL == (plist = H5P_object_verify(plist_id, H5P_DATASET_ACCESS, false)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set prefix */
@@ -1429,7 +1429,7 @@ H5Pget_efile_prefix(hid_t plist_id, char *prefix /*out*/, size_t size)
     FUNC_ENTER_API(FAIL)
 
     /* Get the plist structure */
-    if (NULL == (plist = H5P_object_verify(plist_id, H5P_DATASET_ACCESS)))
+    if (NULL == (plist = H5P_object_verify(plist_id, H5P_DATASET_ACCESS, true)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get the current prefix */
@@ -1483,7 +1483,7 @@ H5Pset_virtual_prefix(hid_t plist_id, const char *prefix)
     FUNC_ENTER_API(FAIL)
 
     /* Get the plist structure */
-    if (NULL == (plist = H5P_object_verify(plist_id, H5P_DATASET_ACCESS)))
+    if (NULL == (plist = H5P_object_verify(plist_id, H5P_DATASET_ACCESS, false)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set prefix */
@@ -1517,7 +1517,7 @@ H5Pget_virtual_prefix(hid_t plist_id, char *prefix /*out*/, size_t size)
     FUNC_ENTER_API(FAIL)
 
     /* Get the plist structure */
-    if (NULL == (plist = H5P_object_verify(plist_id, H5P_DATASET_ACCESS)))
+    if (NULL == (plist = H5P_object_verify(plist_id, H5P_DATASET_ACCESS, true)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get the current prefix */

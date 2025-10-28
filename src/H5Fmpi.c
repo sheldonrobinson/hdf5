@@ -247,7 +247,7 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5Fset_mpi_atomicity(hid_t file_id, hbool_t flag)
+H5Fset_mpi_atomicity(hid_t file_id, bool flag)
 {
     H5VL_object_t                   *vol_obj;             /* File info */
     H5VL_optional_args_t             vol_cb_args;         /* Arguments to VOL callback */
@@ -395,7 +395,7 @@ H5F_mpi_retrieve_comm(hid_t loc_id, hid_t acspl_id, MPI_Comm *mpi_comm)
         unsigned long      driver_feat_flags;
         H5FD_class_t      *driver_class = NULL;
 
-        if (NULL == (plist = H5P_object_verify(acspl_id, H5P_FILE_ACCESS)))
+        if (NULL == (plist = H5P_object_verify(acspl_id, H5P_FILE_ACCESS, true)))
             HGOTO_ERROR(H5E_FILE, H5E_BADTYPE, FAIL, "not a file access list");
 
         if (H5P_peek(plist, H5F_ACS_FILE_DRV_NAME, &driver_prop) < 0)

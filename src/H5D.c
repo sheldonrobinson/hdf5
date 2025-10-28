@@ -1169,7 +1169,7 @@ done:
 } /* end H5Dread_multi_async() */
 
 /*-------------------------------------------------------------------------
- * Function:    H5Dread_chunk
+ * Function:    H5Dread_chunk2
  *
  * Purpose:     Reads an entire chunk from the file directly.
  *
@@ -1178,7 +1178,8 @@ done:
  *---------------------------------------------------------------------------
  */
 herr_t
-H5Dread_chunk(hid_t dset_id, hid_t dxpl_id, const hsize_t *offset, uint32_t *filters, void *buf /*out*/)
+H5Dread_chunk2(hid_t dset_id, hid_t dxpl_id, const hsize_t *offset, uint32_t *filters /*out*/,
+               void *buf /*out*/, size_t *buf_size)
 {
     H5VL_object_t                      *vol_obj;             /* Dataset for this operation   */
     H5VL_optional_args_t                vol_cb_args;         /* Arguments to VOL callback */
@@ -1190,12 +1191,12 @@ H5Dread_chunk(hid_t dset_id, hid_t dxpl_id, const hsize_t *offset, uint32_t *fil
     /* Check arguments */
     if (NULL == (vol_obj = H5VL_vol_object_verify(dset_id, H5I_DATASET)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "dset_id is not a dataset ID");
-    if (!buf)
-        HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "buf cannot be NULL");
     if (!offset)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "offset cannot be NULL");
     if (!filters)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "filters cannot be NULL");
+    if (!buf_size)
+        HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "buf_size cannot be NULL");
 
     /* Get the default dataset transfer property list if the user didn't provide one */
     if (H5P_DEFAULT == dxpl_id)
@@ -1204,11 +1205,12 @@ H5Dread_chunk(hid_t dset_id, hid_t dxpl_id, const hsize_t *offset, uint32_t *fil
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "dxpl_id is not a dataset transfer property list ID");
 
     /* Set up VOL callback arguments */
-    dset_opt_args.chunk_read.offset  = offset;
-    dset_opt_args.chunk_read.filters = 0;
-    dset_opt_args.chunk_read.buf     = buf;
-    vol_cb_args.op_type              = H5VL_NATIVE_DATASET_CHUNK_READ;
-    vol_cb_args.args                 = &dset_opt_args;
+    dset_opt_args.chunk_read.offset   = offset;
+    dset_opt_args.chunk_read.filters  = 0;
+    dset_opt_args.chunk_read.buf      = buf;
+    dset_opt_args.chunk_read.buf_size = buf_size;
+    vol_cb_args.op_type               = H5VL_NATIVE_DATASET_CHUNK_READ;
+    vol_cb_args.args                  = &dset_opt_args;
 
     /* Read the raw chunk */
     if (H5VL_dataset_optional(vol_obj, &vol_cb_args, dxpl_id, H5_REQUEST_NULL) < 0)
@@ -1219,7 +1221,7 @@ H5Dread_chunk(hid_t dset_id, hid_t dxpl_id, const hsize_t *offset, uint32_t *fil
 
 done:
     FUNC_LEAVE_API(ret_value)
-} /* end H5Dread_chunk() */
+} /* end H5Dread_chunk2() */
 
 /*-------------------------------------------------------------------------
  * Function:    H5D__write_api_common
@@ -1592,8 +1594,14 @@ H5Dscatter(H5D_scatter_func_t op, void *op_data, hid_t type_id, hid_t dst_space_
 
     /* Loop until all data has been scattered */
     while (nelmts > 0) {
-        /* Make callback to retrieve data */
-        if (op(&src_buf, &src_buf_nbytes, op_data) < 0)
+        /* Prepare & restore library for user callback */
+        H5_BEFORE_USER_CB(FAIL)
+            {
+                /* Make callback to retrieve data */
+                ret_value = op(&src_buf, &src_buf_nbytes, op_data);
+            }
+        H5_AFTER_USER_CB(FAIL)
+        if (ret_value < 0)
             HGOTO_ERROR(H5E_DATASET, H5E_CALLBACK, FAIL, "callback operator returned failure");
 
         /* Calculate number of elements */
@@ -1704,8 +1712,16 @@ H5Dgather(hid_t src_space_id, const void *src_buf, hid_t type_id, size_t dst_buf
         assert(nelmts_gathered == MIN(dst_buf_nelmts, (size_t)nelmts));
 
         /* Make callback to process dst_buf */
-        if (op && op(dst_buf, nelmts_gathered * type_size, op_data) < 0)
-            HGOTO_ERROR(H5E_DATASET, H5E_CALLBACK, FAIL, "callback operator returned failure");
+        if (op) {
+            /* Prepare & restore library for user callback */
+            H5_BEFORE_USER_CB(FAIL)
+                {
+                    ret_value = op(dst_buf, nelmts_gathered * type_size, op_data);
+                }
+            H5_AFTER_USER_CB(FAIL)
+            if (ret_value < 0)
+                HGOTO_ERROR(H5E_DATASET, H5E_CALLBACK, FAIL, "callback operator returned failure");
+        }
 
         nelmts -= (hssize_t)nelmts_gathered;
         assert(op || (nelmts == 0));

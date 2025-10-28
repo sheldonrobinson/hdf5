@@ -218,7 +218,9 @@ done:
 herr_t
 H5S_select_copy(H5S_t *dst, const H5S_t *src, bool share_selection)
 {
-    herr_t ret_value = FAIL; /* Return value */
+    H5S_t  tmp_space;
+    bool   copied_space = false;
+    herr_t ret_value    = FAIL; /* Return value */
 
     FUNC_ENTER_NOAPI(FAIL)
 
@@ -226,18 +228,29 @@ H5S_select_copy(H5S_t *dst, const H5S_t *src, bool share_selection)
     assert(dst);
     assert(src);
 
+    tmp_space = *dst;
+
+    /* Copy regular fields */
+    tmp_space.select = src->select;
+
+    /* Perform correct type of copy based on the type of selection */
+    if ((ret_value = (*src->select.type->copy)(&tmp_space, src, share_selection)) < 0)
+        HGOTO_ERROR(H5E_DATASPACE, H5E_CANTCOPY, FAIL, "can't copy selection specific information");
+    copied_space = true;
+
     /* Release the current selection */
     if (H5S_SELECT_RELEASE(dst) < 0)
         HGOTO_ERROR(H5E_DATASPACE, H5E_CANTRELEASE, FAIL, "unable to release selection");
 
-    /* Copy regular fields */
-    dst->select = src->select;
-
-    /* Perform correct type of copy based on the type of selection */
-    if ((ret_value = (*src->select.type->copy)(dst, src, share_selection)) < 0)
-        HGOTO_ERROR(H5E_DATASPACE, H5E_CANTCOPY, FAIL, "can't copy selection specific information");
+    *dst = tmp_space;
 
 done:
+
+    if (ret_value < 0) {
+        if (copied_space && H5S_SELECT_RELEASE(&tmp_space) < 0)
+            HGOTO_ERROR(H5E_DATASPACE, H5E_CANTRELEASE, FAIL, "unable to release selection");
+    }
+
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5S_select_copy() */
 
@@ -1449,8 +1462,14 @@ H5S_select_iterate(void *buf, const H5T_t *type, H5S_t *space, const H5S_sel_ite
                 /* Check which type of callback to make */
                 switch (op->op_type) {
                     case H5S_SEL_ITER_OP_APP:
-                        /* Make the application callback */
-                        user_ret = (op->u.app_op.op)(loc, op->u.app_op.type_id, ndims, coords, op_data);
+                        /* Prepare & restore library for user callback */
+                        H5_BEFORE_USER_CB(H5_ITER_ERROR)
+                            {
+                                /* Make the application callback */
+                                user_ret =
+                                    (op->u.app_op.op)(loc, op->u.app_op.type_id, ndims, coords, op_data);
+                            }
+                        H5_AFTER_USER_CB(H5_ITER_ERROR)
                         break;
 
                     case H5S_SEL_ITER_OP_LIB:
@@ -2569,11 +2588,11 @@ H5S_select_project_intersection(H5S_t *src_space, H5S_t *dst_space, H5S_t *src_i
                     /* Advance iterators */
                     if (H5S_SELECT_ITER_NEXT(ss_iter, 1) < 0)
                         HGOTO_ERROR(H5E_DATASPACE, H5E_CANTNEXT, FAIL,
-                                    "can't advacne source selection iterator");
+                                    "can't advance source selection iterator");
                     ss_iter->elmt_left--;
                     if (H5S_SELECT_ITER_NEXT(ds_iter, 1) < 0)
                         HGOTO_ERROR(H5E_DATASPACE, H5E_CANTNEXT, FAIL,
-                                    "can't advacne destination selection iterator");
+                                    "can't advance destination selection iterator");
                     ds_iter->elmt_left--;
                 } while (ss_iter->elmt_left > 0);
                 assert(H5S_SELECT_ITER_NELMTS(ds_iter) == 0);

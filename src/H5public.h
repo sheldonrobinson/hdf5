@@ -16,23 +16,11 @@
 #ifndef H5public_H
 #define H5public_H
 
-/* Include files for public use... */
-/*
- * Since H5pubconf.h is a generated header file, it is messy to try
- * to put a #ifndef H5pubconf_H ... #endif guard in it.
- * HDF5 has set an internal rule that it is being included here.
- * Source files should NOT include H5pubconf.h directly but include
- * it via H5public.h.  The #ifndef H5public_H guard above would
- * prevent repeated include.
- */
-#include "H5pubconf.h" /* From configure */
+/* Configure options */
+#include "H5pubconf.h"
 
 /* API Version macro wrapper definitions */
 #include "H5version.h"
-
-#ifdef H5_HAVE_FEATURES_H
-#include <features.h> /* For setting POSIX, BSD, etc. compatibility */
-#endif
 
 /* C library header files for things that appear in HDF5 public headers */
 #ifdef __cplusplus
@@ -50,9 +38,7 @@
  * on Windows, though it doesn't necessarily contain all the POSIX types
  * we need for HDF5 (e.g. ssize_t).
  */
-#ifdef H5_HAVE_SYS_TYPES_H
 #include <sys/types.h>
-#endif
 
 #ifdef H5_HAVE_PARALLEL
 /* Don't link against MPI C++ bindings */
@@ -87,15 +73,15 @@
 /**
  * For pre-releases like \c snap0. Empty string for official releases.
  */
-#define H5_VERS_SUBRELEASE ""
+#define H5_VERS_SUBRELEASE "2"
 /**
  * Short version string
  */
-#define H5_VERS_STR "2.0.0"
+#define H5_VERS_STR "2.0.0-2"
 /**
  * Full version string
  */
-#define H5_VERS_INFO "HDF5 library version: 2.0.0"
+#define H5_VERS_INFO "HDF5 library version: 2.0.0-2"
 
 #define H5check() H5check_version(H5_VERS_MAJOR, H5_VERS_MINOR, H5_VERS_RELEASE)
 
@@ -127,7 +113,7 @@
  *          The #H5_VERSION_GE macro compares the version of the HDF5 library
  *          being used against the version number specified in the parameters.
  *
- *          For more information about release versioning, see \ref_h5lib_relver.
+ *          For more information about release versioning, see \ref RELVERSION.
  *
  * \since 1.8.7
  *
@@ -163,7 +149,7 @@
  *          The #H5_VERSION_LE macro compares the version of the HDF5 library
  *          being used against the version number specified in the parameters.
  *
- *          For more information about release versioning, see \ref_h5lib_relver.
+ *          For more information about release versioning, see \ref RELVERSION.
  *
  * \since 1.8.7
  *
@@ -173,16 +159,21 @@
      ((H5_VERS_MAJOR == Maj) && (H5_VERS_MINOR < Min)) || (H5_VERS_MAJOR < Maj))
 
 /* Macros for various environment variables that HDF5 interprets */
+
 /**
  * Used to specify the name of an HDF5 Virtual File Driver to use as
  * the default file driver for file access. Setting this environment
  * variable overrides the default file driver for File Access Property
  * Lists.
+ *
+ * \since 1.14.0
  */
 #define HDF5_DRIVER "HDF5_DRIVER"
 /**
  * Used to specify a configuration string for the HDF5 Virtual File
  * Driver being used for file access.
+ *
+ * \since 1.14.0
  */
 #define HDF5_DRIVER_CONFIG "HDF5_DRIVER_CONFIG"
 /**
@@ -190,12 +181,16 @@
  * to use as the default VOL connector for file access. Setting this
  * environment variable overrides the default VOL connector for File
  * Access Property Lists.
+ *
+ * \since 1.14.0
  */
 #define HDF5_VOL_CONNECTOR "HDF5_VOL_CONNECTOR"
 /**
  * Used to specify a delimiter-separated (currently, ';' for Windows
  * and ':' for other systems) list of paths that HDF5 should search
  * when loading plugins.
+ *
+ * \since 1.14.0
  */
 #define HDF5_PLUGIN_PATH "HDF5_PLUGIN_PATH"
 /**
@@ -204,6 +199,8 @@
  * in H5PLpublic.h as H5PL_NO_PLUGIN), then dynamic loading of any
  * HDF5 plugins will be disabled. No other values are valid for this
  * environment variable.
+ *
+ * \since 1.14.0
  */
 #define HDF5_PLUGIN_PRELOAD "HDF5_PLUGIN_PRELOAD"
 /**
@@ -211,18 +208,34 @@
  * opening a file. Valid values for this environment variable are
  * as follows:
  *
- *  "TRUE" or "1"  - Request that file locks should be used
- *  "FALSE" or "0" - Request that file locks should NOT be used
+ *  "TRUE" or "1"  - Request that file locks should be used <br />
+ *  "FALSE" or "0" - Request that file locks should NOT be used <br />
  *  "BEST_EFFORT"  - Request that file locks should be used and
  *                     that any locking errors caused by file
  *                     locking being disabled on the system
  *                     should be ignored
+ *
+ * \since 1.14.0
  */
 #define HDF5_USE_FILE_LOCKING "HDF5_USE_FILE_LOCKING"
 /**
  * Used to instruct HDF5 not to cleanup files created during testing.
+ *
+ * \since 1.14.0
  */
 #define HDF5_NOCLEANUP "HDF5_NOCLEANUP"
+/**
+ * Macro for environment variable used to instruct HDF5 to prefer
+ * Windows code pages over UTF-8 for functions that accept 'char *'
+ * parameters. Valid values for this environment variable are as
+ * follows (case-insensitive):
+ *
+ * "TRUE" or "1"  - Request that Windows code pages be preferred <br />
+ * "FALSE" or "0" - Request that UTF-8 be preferred <br />
+ *
+ * \since 2.0.0
+ */
+#define HDF5_PREFER_WINDOWS_CODE_PAGE "HDF5_PREFER_WINDOWS_CODE_PAGE"
 
 /**
  * Status return values.  Failed integer functions in HDF5 result almost
@@ -245,12 +258,12 @@ typedef int herr_t;
  * \deprecated Now that we require C99, hbool_t is typedef'd to C99's bool
  *             and hbool_t is considered deprecated. Due to its long-standing,
  *             widespread use, we have no plans to remove the hbool_t typedef
- *             from the public API, though we will probably switch to using
- *             bool in the public API starting in the next major release of HDF5.
+ *             from the public API, though it is otherwise unused in the library.
  * \attention Boolean functions cannot fail.
  */
 #include <stdbool.h>
 typedef bool hbool_t;
+
 /**
  * Three-valued Boolean type. Functions that return #htri_t however return zero
  * (false), positive (true), or negative (failure).
@@ -327,15 +340,22 @@ typedef off_t HDoff_t;
  * should be discouraged in new code.
  */
 typedef int64_t hssize_t;
-#define PRIdHSIZE          PRId64
-#define PRIiHSIZE          PRIi64
-#define PRIoHSIZE          PRIo64
-#define PRIuHSIZE          PRIu64
-#define PRIxHSIZE          PRIx64
+/** d print conversion specifier for signed integer type \since 1.10.8 */
+#define PRIdHSIZE PRId64
+/** i print conversion specifier for signed integer type \since 1.10.8 */
+#define PRIiHSIZE PRIi64
+/** o print conversion specifier for signed integer type \since 1.10.8 */
+#define PRIoHSIZE PRIo64
+/** u print conversion specifier for signed integer type \since 1.10.8 */
+#define PRIuHSIZE PRIu64
+/** x print conversion specifier for signed integer type \since 1.10.8 */
+#define PRIxHSIZE PRIx64
+/** X print conversion specifier for signed integer type \since 1.10.8 */
 #define PRIXHSIZE          PRIX64
 #define H5_SIZEOF_HSIZE_T  8
 #define H5_SIZEOF_HSSIZE_T 8
-#define HSIZE_UNDEF        UINT64_MAX
+/** Represents the largest possible value of uint64_t \since 1.10.0 */
+#define HSIZE_UNDEF UINT64_MAX
 
 /**
  * The address of an object in the file.
@@ -343,10 +363,15 @@ typedef int64_t hssize_t;
  * \internal Defined as a (minimum) 64-bit unsigned integer type.
  */
 typedef uint64_t haddr_t;
-#define PRIdHADDR           PRId64
-#define PRIoHADDR           PRIo64
-#define PRIuHADDR           PRIu64
-#define PRIxHADDR           PRIx64
+/** d print conversion specifier for unsigned integer type \since 1.8.23 */
+#define PRIdHADDR PRId64
+/** o print conversion specifier for unsigned integer type \since 1.8.23 */
+#define PRIoHADDR PRIo64
+/** u print conversion specifier for unsigned integer type \since 1.8.23 */
+#define PRIuHADDR PRIu64
+/** x print conversion specifier for unsigned integer type \since 1.8.23 */
+#define PRIxHADDR PRIx64
+/** X print conversion specifier for unsigned integer type \since 1.8.23 */
 #define PRIXHADDR           PRIX64
 #define H5_SIZEOF_HADDR_T   8
 #define HADDR_UNDEF         UINT64_MAX
@@ -407,6 +432,8 @@ typedef struct H5_ih_info_t {
  * \details Tokens are unique and permanent identifiers that are
  *          used to reference HDF5 objects in a container. This allows
  *          for 128-bit tokens
+ *
+ * \since 1.12.0
  */
 #define H5O_MAX_TOKEN_SIZE (16)
 
@@ -729,7 +756,7 @@ H5_DLL herr_t H5check_version(unsigned majnum, unsigned minnum, unsigned relnum)
  *
  * \since 1.14.0
  */
-H5_DLL herr_t H5is_library_terminating(hbool_t *is_terminating);
+H5_DLL herr_t H5is_library_terminating(bool *is_terminating);
 /**
  * \ingroup H5
  * \brief Determines whether the HDF5 library was built with the thread-safety
@@ -748,7 +775,7 @@ H5_DLL herr_t H5is_library_terminating(hbool_t *is_terminating);
  * \since 1.10.0
  *
  */
-H5_DLL herr_t H5is_library_threadsafe(hbool_t *is_ts);
+H5_DLL herr_t H5is_library_threadsafe(bool *is_ts);
 /**
  * \ingroup H5
  * \brief Frees memory allocated by the HDF5 library
@@ -841,7 +868,7 @@ H5_DLL herr_t H5free_memory(void *mem);
  * \since 1.8.15
  *
  */
-H5_DLL void *H5allocate_memory(size_t size, hbool_t clear);
+H5_DLL void *H5allocate_memory(size_t size, bool clear);
 /**
  * \ingroup H5
  * \brief Resizes and, if required, re-allocates memory that will later be
