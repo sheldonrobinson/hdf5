@@ -73,15 +73,15 @@
 /**
  * For pre-releases like \c snap0. Empty string for official releases.
  */
-#define H5_VERS_SUBRELEASE "2"
+#define H5_VERS_SUBRELEASE "4"
 /**
  * Short version string
  */
-#define H5_VERS_STR "2.0.0-2"
+#define H5_VERS_STR "2.0.0-4"
 /**
  * Full version string
  */
-#define H5_VERS_INFO "HDF5 library version: 2.0.0-2"
+#define H5_VERS_INFO "HDF5 library version: 2.0.0-4"
 
 #define H5check() H5check_version(H5_VERS_MAJOR, H5_VERS_MINOR, H5_VERS_RELEASE)
 
@@ -289,21 +289,11 @@ typedef int htri_t;
  *
  * Use of ssize_t should be discouraged in new code.
  */
-#if H5_SIZEOF_SSIZE_T == 0
-/* Undefine this size, we will re-define it in one of the sections below */
-#undef H5_SIZEOF_SSIZE_T
-#if H5_SIZEOF_SIZE_T == H5_SIZEOF_INT
-typedef int ssize_t;
-#define H5_SIZEOF_SSIZE_T H5_SIZEOF_INT
-#elif H5_SIZEOF_SIZE_T == H5_SIZEOF_LONG
-typedef long ssize_t;
-#define H5_SIZEOF_SSIZE_T H5_SIZEOF_LONG
-#elif H5_SIZEOF_SIZE_T == H5_SIZEOF_LONG_LONG
-typedef long long ssize_t;
-#define H5_SIZEOF_SSIZE_T H5_SIZEOF_LONG_LONG
-#else /* Can't find matching type for ssize_t */
-#error "nothing appropriate for ssize_t"
-#endif
+#if defined(_WIN32) && !defined(__MINGW32__)
+#include <BaseTsd.h>
+typedef SSIZE_T ssize_t;
+/* This will have been defined to 0 in configure */
+#define H5_SIZEOF_SSIZE_T H5_SIZEOF_SIZE_T
 #endif
 
 /**
@@ -461,6 +451,22 @@ typedef void (*H5_atclose_func_t)(void *ctx);
  * Does the compiler support the __builtin_expect() syntax?
  * It's not a problem if not.
  */
+
+/* clang-format off */
+#if defined(__has_builtin)
+    /* clang extension to check for builtins. Do this first, because clang
+     * also defines __GNUC__ and didn't support __builtin_expect() until
+     * more recently.
+     */
+#   if __has_builtin(__builtin_expect)
+#       define H5_HAVE_BUILTIN_EXPECT 1
+#   endif
+#elif defined(__GNUC__)
+    /* __builtin_expect() has been supported since 2.95 or 2.96 (circa 2000) */
+#   define H5_HAVE_BUILTIN_EXPECT 1
+#endif
+/* clang-format on */
+
 #if H5_HAVE_BUILTIN_EXPECT
 #define H5_LIKELY(expression)   __builtin_expect(!!(expression), 1)
 #define H5_UNLIKELY(expression) __builtin_expect(!!(expression), 0)
