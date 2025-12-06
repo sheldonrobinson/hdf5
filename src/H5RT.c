@@ -394,7 +394,9 @@ H5RT__bulk_load(H5RT_node_t *node, int rank, H5RT_leaf_t *leaves, size_t count, 
         if (prev_sort_dim != rank - 1) {
             assert(prev_sort_dim < rank - 1);
             sort_dim = prev_sort_dim + 1;
-            HDqsort_r((void *)leaves, count, sizeof(H5RT_leaf_t), H5RT__leaf_compare, (void *)&sort_dim);
+            if (H5_UNLIKELY(HDqsort_r((void *)leaves, count, sizeof(H5RT_leaf_t), H5RT__leaf_compare,
+                                      (void *)&sort_dim) < 0))
+                HGOTO_ERROR(H5E_INTERNAL, H5E_CANTSORT, FAIL, "failed to sort R-tree leaves");
         }
         else {
             sort_dim = prev_sort_dim;
@@ -459,6 +461,11 @@ done:
  *              On success, the R-tree takes ownership of the caller-allocated
  *               leaves array.
  *
+ *              NOTE: This routine uses a global variable internally, and
+ *                is therefore not thread-safe. See the 'qsort_r_threadsafe'
+ *                branch of the HDF5 GitHub repository for a beta
+ *                implementation that is threadsafe.
+ *
  * Return:      A valid pointer to the new R-tree on success/NULL on failure
  *
  *-------------------------------------------------------------------------
@@ -518,12 +525,9 @@ done:
 static herr_t
 H5RT__search_recurse(H5RT_node_t *node, int rank, hsize_t min[], hsize_t max[], H5RT_result_set_t *result_set)
 {
-    hsize_t *curr_min = NULL;
-    hsize_t *curr_max = NULL;
-
-    H5RT_leaf_t *curr_leaf = NULL;
-    H5RT_node_t *curr_node = NULL;
-    herr_t       ret_value = SUCCEED;
+    hsize_t *curr_min  = NULL;
+    hsize_t *curr_max  = NULL;
+    herr_t   ret_value = SUCCEED;
 
     FUNC_ENTER_PACKAGE
 
@@ -531,11 +535,11 @@ H5RT__search_recurse(H5RT_node_t *node, int rank, hsize_t min[], hsize_t max[], 
     assert(result_set);
 
     /* Check all children for intersection */
-    for (int i = 0; i < node->nchildren; i++)
-        if (node->children_are_leaves) {
-            curr_leaf = node->children.leaves + i;
-            curr_min  = curr_leaf->min;
-            curr_max  = curr_leaf->max;
+    if (node->children_are_leaves)
+        for (int i = 0; i < node->nchildren; i++) {
+            H5RT_leaf_t *curr_leaf = node->children.leaves + i;
+            curr_min               = curr_leaf->min;
+            curr_max               = curr_leaf->max;
 
             if (H5RT__leaves_intersect(rank, min, max, curr_min, curr_max)) {
                 /* We found an intersecting leaf, add it to the result set */
@@ -543,11 +547,12 @@ H5RT__search_recurse(H5RT_node_t *node, int rank, hsize_t min[], hsize_t max[], 
                     HGOTO_ERROR(H5E_RTREE, H5E_CANTALLOC, FAIL, "failed to add result to result set");
             }
         }
-        else {
+    else
+        for (int i = 0; i < node->nchildren; i++) {
             /* This is an internal node in the r-tree */
-            curr_node = node->children.nodes[i];
-            curr_min  = curr_node->min;
-            curr_max  = curr_node->max;
+            H5RT_node_t *curr_node = node->children.nodes[i];
+            curr_min               = curr_node->min;
+            curr_max               = curr_node->max;
 
             /* Only recurse into child node if its bounding box overlaps with the search region */
             if (H5RT__leaves_intersect(rank, min, max, curr_min, curr_max)) {

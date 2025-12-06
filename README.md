@@ -1,4 +1,4 @@
-HDF5 version 2.0.0-4 currently under development
+HDF5 version 2.0.1 currently under development
 
 > [!WARNING]
 > **Heads Up: HDF5 Dropped Autotools March 10th**
@@ -9,7 +9,7 @@ HDF5 version 2.0.0-4 currently under development
 
 ![HDF5 Logo][u3]
 
-[![develop cmake build status](https://img.shields.io/github/actions/workflow/status/HDFGroup/hdf5/cmake.yml?branch=develop&label=HDF5%20develop%20CMake%20CI)](https://github.com/HDFGroup/hdf5/actions/workflows/cmake.yml?query=branch%3Adevelop)
+[![develop cmake build status](https://img.shields.io/github/actions/workflow/status/HDFGroup/hdf5/call-workflows.yml?branch=develop&label=HDF5%20develop%20CMake%20CI)](https://github.com/HDFGroup/hdf5/actions/workflows/call-workflows.yml?query=branch%3Adevelop)
 [![HDF5 develop daily build status](https://img.shields.io/github/actions/workflow/status/HDFGroup/hdf5/daily-schedule.yml?branch=develop&label=HDF5%20develop%20daily%20build)](https://github.com/HDFGroup/hdf5/actions/workflows/daily-schedule.yml?query=branch%3Adevelop)
 [![HDF-EOS5 build status](https://img.shields.io/github/actions/workflow/status/HDFGroup/hdf5/hdfeos5.yml?branch=develop&label=HDF-EOS5)](https://github.com/HDFGroup/hdf5/actions/workflows/hdfeos5.yml?query=branch%3Adevelop)
 [![netCDF build status](https://img.shields.io/github/actions/workflow/status/HDFGroup/hdf5/netcdf.yml?branch=develop&label=netCDF)](https://github.com/HDFGroup/hdf5/actions/workflows/netcdf.yml?query=branch%3Adevelop)
@@ -20,6 +20,7 @@ HDF5 version 2.0.0-4 currently under development
 [![BSD](https://img.shields.io/badge/License-BSD-blue.svg)](https://github.com/HDFGroup/hdf5/blob/develop/LICENSE)
 [![OSS-Fuzz Status](https://oss-fuzz-build-logs.storage.googleapis.com/badges/hdf5.svg)](https://oss-fuzz-build-logs.storage.googleapis.com/index.html#hdf5)
 [![Link Checker Status](https://github.com/HDFGroup/hdf5/actions/workflows/linkchecker.yml/badge.svg)](https://github.com/HDFGroup/hdf5/actions/workflows/linkchecker.yml)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.17808614.svg)](https://doi.org/10.5281/zenodo.17808614)
 
 [HPC configure/build/test results](https://my.cdash.org/index.php?project=HDF5)
 
@@ -51,7 +52,7 @@ Several more files are located within the [release_docs/][u4] directory with spe
 details for several common platforms and configurations.
 - INSTALL - Start Here. General instructions for compiling and installing the library or using an installed library
 - INSTALL_CMAKE - instructions for building with CMake (Kitware.com)
-- INSTALL_parallel - instructions for building and configuring Parallel HDF5
+- README_HPC.md - instructions for building and configuring Parallel HDF5 on HPC systems
 - INSTALL_Windows and INSTALL_Cygwin - MS Windows installations.
 - USING_HDF5_CMake - Build and Install HDF5 Applications with CMake
 - USING_CMake_Examples - Build and Test HDF5 Examples with CMake
@@ -117,11 +118,23 @@ Periodically development code snapshots are provided at the following URL:
 
 Source packages for current and previous releases are located at:
 
-   hdf5 1.14 releases:
-   https://support.hdfgroup.org/releases/hdf5/v1_14/index.html
+   [Latest HDF5 release](https://github.com/HDFGroup/hdf5/releases)
+   [Previous releases](https://support.hdfgroup.org/archive/support/ftp/HDF5/releases/index.html)
 
-   Archived releases:
-   https://support.hdfgroup.org/archive/support/ftp/HDF5/releases/index.html
+Maven artifacts for Java bindings and examples are available at:
+
+   GitHub Packages:
+   https://maven.pkg.github.com/HDFGroup/hdf5
+
+   Maven Central (coming soon):
+   https://central.sonatype.com/artifact/org.hdfgroup/hdf5-java
+
+Java Examples Maven Integration:
+   - **org.hdfgroup:hdf5-java** - HDF5 Java bindings with platform-specific JARs (linux-x86_64, windows-x86_64, macos-x86_64, macos-aarch64)
+   - **org.hdfgroup:hdf5-java-examples** - Complete collection of Java examples (platform-independent)
+   - Cross-platform CI/CD testing and deployment
+   - Comprehensive Maven integration with automated testing
+   - See HDF5Examples/JAVA/README-MAVEN.md for complete usage instructions
 
 Development code is available at our Github location:
 
