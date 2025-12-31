@@ -31,6 +31,9 @@ on:
 permissions:
   contents: read
 
+env:
+  CTEST_OUTPUT_ON_FAILURE: 1
+
 # Previous workflows must pass to get here so tag the commit that created the files
 jobs:
   create-tag:
@@ -40,7 +43,7 @@ jobs:
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - name: Get Sources
-        uses: actions/checkout@v6.0.0
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
         with:
           fetch-depth: 0
           ref: '${{ github.head_ref || github.ref_name }}'
