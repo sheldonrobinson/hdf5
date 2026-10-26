@@ -4,12 +4,20 @@ name: FreeBSD CI
 on:
   workflow_dispatch:
   push:
+    paths-ignore:
+      - '.github/CODEOWNERS'
+      - '.github/FUNDING.yml'
+      - 'docs/**'
+      - 'release_docs/**'
+      - 'ACKNOWLEDGEMENTS'
+      - 'LICENSE**'
+      - '**.md'
   pull_request:
     branches: [ develop ]
     paths-ignore:
       - '.github/CODEOWNERS'
       - '.github/FUNDING.yml'
-      - 'doc/**'
+      - 'docs/**'
       - 'release_docs/**'
       - 'ACKNOWLEDGEMENTS'
       - 'LICENSE**'
@@ -37,14 +45,16 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        freebsd-version: ['13.5', '14.3', '15.0']
+        freebsd-version: ['14.3', '15.0']
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Build and test on FreeBSD
-        uses: vmactions/freebsd-vm@670398e4236735b8b65805c3da44b7a511fb8b27 # v1
+        uses: vmactions/freebsd-vm@a2f9a41fa97f6848b8c3b791087dfcdaa5b473ff # v1
         with:
           release: ${{ matrix.freebsd-version }}
           usesh: true

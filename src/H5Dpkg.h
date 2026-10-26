@@ -268,17 +268,13 @@ typedef struct {
 } H5D_contig_storage_t;
 
 typedef struct {
-    hsize_t *scaled; /* Scaled coordinates for a chunk */
-} H5D_chunk_storage_t;
-
-typedef struct {
     void *buf;   /* Buffer for compact dataset */
     bool *dirty; /* Pointer to dirty flag to mark */
 } H5D_compact_storage_t;
 
 typedef union H5D_storage_t {
-    H5D_contig_storage_t  contig;  /* Contiguous information for dataset */
-    H5D_chunk_storage_t   chunk;   /* Chunk information for dataset */
+    H5D_contig_storage_t contig; /* Contiguous information for dataset */
+    /* No global storage information for a chunked dataset for this union */
     H5D_compact_storage_t compact; /* Compact information for dataset */
     H5O_efl_t             efl;     /* External file list information for dataset */
 } H5D_storage_t;
@@ -562,14 +558,14 @@ typedef struct H5D_rdcc_t {
     unsigned scaled_encode_bits[H5S_MAX_RANK]; /* The number of bits needed to encode the scaled dim sizes */
 } H5D_rdcc_t;
 
-/* The raw data contiguous data cache */
-typedef struct H5D_rdcdc_t {
+/* Information about the dataset sieve buffer */
+typedef struct H5D_sieve_buf_t {
     unsigned char *sieve_buf;      /* Buffer to hold data sieve buffer */
     haddr_t        sieve_loc;      /* File location (offset) of the data sieve buffer */
     size_t         sieve_size;     /* Size of the data sieve buffer used (in bytes) */
     size_t         sieve_buf_size; /* Size of the data sieve buffer allocated (in bytes) */
     bool           sieve_dirty;    /* Flag to indicate that the data sieve buffer is dirty */
-} H5D_rdcdc_t;
+} H5D_sieve_buf_t;
 
 /*
  * A dataset is made of two layers, an H5D_t struct that is unique to
@@ -598,12 +594,8 @@ struct H5D_shared_t {
 
     /* Buffered/cached information for types of raw data storage*/
     struct {
-        H5D_rdcdc_t contig; /* Information about contiguous data */
-                            /* (Note that the "contig" cache
-                             * information can be used by a chunked
-                             * dataset in certain circumstances)
-                             */
-        H5D_rdcc_t chunk;   /* Information about chunked data */
+        H5D_sieve_buf_t sieve; /* Information about dataset sieve buffer */
+        H5D_rdcc_t      chunk; /* Information about chunked data */
     } cache;
 
     H5D_append_flush_t append_flush;   /* Append flush property information */
@@ -761,8 +753,8 @@ H5_DLL herr_t H5D__contig_check(const H5F_t *f, const H5O_layout_t *layout, cons
                                 const H5T_t *dt);
 
 /* Functions that operate on chunked dataset storage */
-H5_DLL htri_t H5D__chunk_cacheable(const H5D_io_info_t *io_info, H5D_dset_io_info_t *dset_info, haddr_t caddr,
-                                   bool write_op);
+H5_DLL htri_t H5D__chunk_cacheable(const H5D_io_info_t *io_info, H5D_dset_io_info_t *dset_info,
+                                   const hsize_t *scaled, haddr_t caddr, bool write_op);
 H5_DLL herr_t H5D__chunk_create(const H5D_t *dset /*in,out*/);
 H5_DLL herr_t H5D__chunk_set_info(const H5D_t *dset);
 H5_DLL bool   H5D__chunk_is_space_alloc(const H5O_storage_t *storage);

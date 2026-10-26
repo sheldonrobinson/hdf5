@@ -46,21 +46,26 @@ macro (SET_HDF_OUTPUT_DIRS package_prefix)
     set (CMAKE_RUNTIME_OUTPUT_DIRECTORY
         ${PROJECT_BINARY_DIR}/bin CACHE PATH "Single Directory for all Executables."
     )
+    mark_as_advanced (CMAKE_RUNTIME_OUTPUT_DIRECTORY)
     set (CMAKE_LIBRARY_OUTPUT_DIRECTORY
         ${PROJECT_BINARY_DIR}/bin CACHE PATH "Single Directory for all Libraries"
     )
+    mark_as_advanced (CMAKE_LIBRARY_OUTPUT_DIRECTORY)
     set (CMAKE_ARCHIVE_OUTPUT_DIRECTORY
         ${PROJECT_BINARY_DIR}/bin CACHE PATH "Single Directory for all static libraries."
     )
+    mark_as_advanced (CMAKE_ARCHIVE_OUTPUT_DIRECTORY)
     set (CMAKE_Fortran_MODULE_DIRECTORY
         ${PROJECT_BINARY_DIR}/mod CACHE PATH "Single Directory for all fortran modules."
     )
+    mark_as_advanced (CMAKE_Fortran_MODULE_DIRECTORY)
     get_property(_isMultiConfig GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
     if (_isMultiConfig)
       set (CMAKE_TEST_OUTPUT_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${HDF_CFG_NAME})
       set (CMAKE_PDB_OUTPUT_DIRECTORY
           ${PROJECT_BINARY_DIR}/bin CACHE PATH "Single Directory for all pdb files."
       )
+      mark_as_advanced (CMAKE_PDB_OUTPUT_DIRECTORY)
     else ()
       set (CMAKE_TEST_OUTPUT_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
     endif ()
@@ -84,6 +89,7 @@ macro (SET_HDF_OUTPUT_DIRS package_prefix)
       set (CMAKE_GENERIC_PROGRAM_FILES)
     endif ()
     set (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT 0 CACHE PATH "" FORCE)
+    mark_as_advanced (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
   endif ()
 endmacro ()
 
@@ -420,7 +426,14 @@ endmacro ()
 
 # HDF_DIR_PATHS: Set up install directory variables and RPATHs.
 macro (HDF_DIR_PATHS package_prefix)
-  option (HDF5_USE_GNU_DIRS "ON to use GNU Coding Standard install directory variables, OFF to use historical settings" OFF)
+  set(_HDF5_USE_GNU_DIRS_DEFAULT ON)
+  if (CMAKE_SYSTEM_NAME MATCHES "^Windows")
+    set(_HDF5_USE_GNU_DIRS_DEFAULT OFF)
+  endif()
+  option (HDF5_USE_GNU_DIRS "ON to use GNU Coding Standard install directory variables, OFF to use historical settings" ${_HDF5_USE_GNU_DIRS_DEFAULT})
+  mark_as_advanced (HDF5_USE_GNU_DIRS)
+  unset (_HDF5_USE_GNU_DIRS_DEFAULT)
+
   if (HDF5_USE_GNU_DIRS)
     include(GNUInstallDirs)
     if (NOT ${package_prefix}_INSTALL_BIN_DIR)
@@ -428,6 +441,9 @@ macro (HDF_DIR_PATHS package_prefix)
     endif ()
     if (NOT ${package_prefix}_INSTALL_LIB_DIR)
       set (${package_prefix}_INSTALL_LIB_DIR ${CMAKE_INSTALL_LIBDIR})
+    endif ()
+    if (NOT ${package_prefix}_INSTALL_JNI_LIB_DIR)
+      set (${package_prefix}_INSTALL_JNI_LIB_DIR ${CMAKE_INSTALL_LIBDIR})
     endif ()
     if (NOT ${package_prefix}_INSTALL_JAR_DIR)
       set (${package_prefix}_INSTALL_JAR_DIR ${CMAKE_INSTALL_LIBDIR})
@@ -442,7 +458,9 @@ macro (HDF_DIR_PATHS package_prefix)
       set (${package_prefix}_INSTALL_DATA_DIR ${CMAKE_INSTALL_DATADIR})
     endif ()
     if (NOT ${package_prefix}_INSTALL_CMAKE_DIR)
-      set (${package_prefix}_INSTALL_CMAKE_DIR ${CMAKE_INSTALL_LIBDIR}/cmake)
+      string(TOLOWER "${package_prefix}" package_prefix_lower)
+      set (${package_prefix}_INSTALL_CMAKE_DIR ${CMAKE_INSTALL_LIBDIR}/cmake/${package_prefix_lower})
+      unset(package_prefix_lower)
     endif ()
     if (NOT ${package_prefix}_INSTALL_DOC_DIR)
       set (${package_prefix}_INSTALL_DOC_DIR ${CMAKE_INSTALL_DOCDIR})
@@ -469,6 +487,9 @@ macro (HDF_DIR_PATHS package_prefix)
       set (${package_prefix}_INSTALL_JAR_DIR lib)
     endif ()
     set (${package_prefix}_INSTALL_LIB_DIR lib)
+  endif ()
+  if (NOT ${package_prefix}_INSTALL_JNI_LIB_DIR)
+    set (${package_prefix}_INSTALL_JNI_LIB_DIR lib)
   endif ()
   if (NOT ${package_prefix}_INSTALL_INCLUDE_DIR)
     set (${package_prefix}_INSTALL_INCLUDE_DIR include)
@@ -497,7 +518,6 @@ macro (HDF_DIR_PATHS package_prefix)
   if (NOT ${package_prefix}_INSTALL_DOC_DIR)
     set (${package_prefix}_INSTALL_DOC_DIR ${${package_prefix}_INSTALL_DATA_DIR})
   endif ()
-  message (STATUS "Final: ${${package_prefix}_INSTALL_DOC_DIR}")
 
   # Append the needed INSTALL_RPATH for HDF Standard binary packages
   if (APPLE)
@@ -516,8 +536,6 @@ macro (HDF_DIR_PATHS package_prefix)
   SET_HDF_BUILD_TYPE()
 
   SET_HDF_OUTPUT_DIRS(${package_prefix})
-
-  include (FetchContent)
 endmacro ()
 
 # ADD_H5_FLAGS: Parse and add compiler flags from a file.

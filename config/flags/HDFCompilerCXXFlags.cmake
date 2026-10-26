@@ -90,7 +90,14 @@ if (CMAKE_CXX_COMPILER_LOADED)
   #-----------------------------------------------------------------------------
 
   if (${CMAKE_SYSTEM_NAME} MATCHES "SunOS")
-    list (APPEND HDF5_CMAKE_CXX_FLAGS "-erroff=%none -DBSD_COMP")
+    # -erroff is an Oracle Developer Studio (SunPro) option. gcc quietly ignores
+    # it (it parses the leading -e as the linker entry option) but clang rejects
+    # it, so only hand it to the compiler that understands it. Each flag must be
+    # a separate list element or they are passed as one bogus argument.
+    if (CMAKE_CXX_COMPILER_ID MATCHES "SunPro")
+      list (APPEND HDF5_CMAKE_CXX_FLAGS "-erroff=%none")
+    endif ()
+    list (APPEND HDF5_CMAKE_CXX_FLAGS "-DBSD_COMP")
   else ()
     # General flags
     #
@@ -139,15 +146,9 @@ if (CMAKE_CXX_COMPILER_LOADED)
     list (APPEND HDF5_CMAKE_CXX_FLAGS "${OPTIMIZE_CXXFLAGS}")
   endif ()
 
-  #-----------------------------------------------------------------------------
-  # Option to override the compiler for h5c++
-  #-----------------------------------------------------------------------------
-  if (HDF5_ENABLE_PARALLEL AND MPI_CXX_FOUND)
-    set (_HDF5_H5CC_CXX_COMPILER ${MPI_CXX_COMPILER})
-  else ()
-    set (_HDF5_H5CC_CXX_COMPILER ${CMAKE_CXX_COMPILER})
-  endif ()
+  set (_HDF5_H5CC_CXX_COMPILER ${CMAKE_CXX_COMPILER})
   set (HDF5_H5CC_CXX_COMPILER ${_HDF5_H5CC_CXX_COMPILER} CACHE STRING "C++ compiler to use in h5c++")
+  mark_as_advanced (HDF5_H5CC_CXX_COMPILER)
 endif ()
 
 #-----------------------------------------------------------------------------

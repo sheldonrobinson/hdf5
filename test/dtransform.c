@@ -54,7 +54,7 @@ const float windchillFfloat[ROWS][COLS] = {
     {25.0F, 18.0F, 11.0F, 4.0F, -3.0F, -11.0F, -18.0F, -25.0F, -32.0F, -39.0F, -46.0F, -54.0F, -61.0F, -68.0F,
      -75.0F, -82.0F, -89.0F, -97.0F},
     {25.0F, 17.0F, 10.0F, 3.0F, -4.0F, -11.0F, -19.0F, -26.0F, -33.0F, -40.0F, -48.0F, -55.0F, -62.0F, -69.0F,
-     -76.0F, -84.0F, -91.0F, -98.0F}};
+     -76.0F, -84.0F, -91.0F, -97.0F}};
 
 const int transformData[ROWS][COLS] = {{36, 31, 25, 19, 13, 7, 1, 5, 11, 16, 22, 28, 34, 40, 46, 52, 57, 63},
                                        {34, 27, 21, 15, 9, 3, 4, 10, 16, 22, 28, 35, 41, 47, 53, 59, 66, 1},
@@ -329,100 +329,116 @@ main(void)
     /* inverses the utrans transform in init_test to get back original array */
     const char *utrans_inv = "(x/3 - 25)*4";
 
-    if ((file_id = H5Fcreate("dtransform.h5", H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT)) < 0)
-        TEST_ERROR;
+#ifdef H5_HAVE_THREADS
+    /* Test with and without threads */
+    for (unsigned threads = false; threads <= true; threads++) {
+        if (threads && H5TSset_internal_threads(4) < 0)
+            TEST_ERROR;
+#endif /* H5_HAVE_THREADS */
 
-    if ((dxpl_id_c_to_f = H5Pcreate(H5P_DATASET_XFER)) < 0)
-        TEST_ERROR;
-    if ((dxpl_id_simple = H5Pcreate(H5P_DATASET_XFER)) < 0)
-        TEST_ERROR;
-    if ((dxpl_id_utrans_inv = H5Pcreate(H5P_DATASET_XFER)) < 0)
-        TEST_ERROR;
-    if ((dxpl_id_polynomial = H5Pcreate(H5P_DATASET_XFER)) < 0)
-        TEST_ERROR;
-    if (H5Pset_data_transform(dxpl_id_c_to_f, c_to_f) < 0)
-        TEST_ERROR;
-    if (H5Pset_data_transform(dxpl_id_polynomial, polynomial) < 0)
-        TEST_ERROR;
-    if (H5Pset_data_transform(dxpl_id_simple, simple) < 0)
-        TEST_ERROR;
-    if (H5Pset_data_transform(dxpl_id_utrans_inv, utrans_inv) < 0)
-        TEST_ERROR;
-    if ((dxpl_id_polynomial_copy = H5Pcopy(dxpl_id_polynomial)) < 0)
-        TEST_ERROR;
-    if ((dxpl_id_c_to_f_copy = H5Pcopy(dxpl_id_c_to_f)) < 0)
-        TEST_ERROR;
+        if ((file_id = H5Fcreate("dtransform.h5", H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT)) < 0)
+            TEST_ERROR;
 
-    /* Run all the tests */
+        if ((dxpl_id_c_to_f = H5Pcreate(H5P_DATASET_XFER)) < 0)
+            TEST_ERROR;
+        if ((dxpl_id_simple = H5Pcreate(H5P_DATASET_XFER)) < 0)
+            TEST_ERROR;
+        if ((dxpl_id_utrans_inv = H5Pcreate(H5P_DATASET_XFER)) < 0)
+            TEST_ERROR;
+        if ((dxpl_id_polynomial = H5Pcreate(H5P_DATASET_XFER)) < 0)
+            TEST_ERROR;
+        if (H5Pset_data_transform(dxpl_id_c_to_f, c_to_f) < 0)
+            TEST_ERROR;
+        if (H5Pset_data_transform(dxpl_id_polynomial, polynomial) < 0)
+            TEST_ERROR;
+        if (H5Pset_data_transform(dxpl_id_simple, simple) < 0)
+            TEST_ERROR;
+        if (H5Pset_data_transform(dxpl_id_utrans_inv, utrans_inv) < 0)
+            TEST_ERROR;
+        if ((dxpl_id_polynomial_copy = H5Pcopy(dxpl_id_polynomial)) < 0)
+            TEST_ERROR;
+        if ((dxpl_id_c_to_f_copy = H5Pcopy(dxpl_id_c_to_f)) < 0)
+            TEST_ERROR;
 
-    if (init_test(file_id) < 0)
-        TEST_ERROR;
-    if (test_set() < 0)
-        TEST_ERROR;
-    TEST_TYPE_CONTIG(dxpl_id_utrans_inv, char, H5T_NATIVE_CHAR, "char", transformData, 0);
-    TEST_TYPE_CONTIG(dxpl_id_utrans_inv, unsigned char, H5T_NATIVE_UCHAR, "uchar", transformData, 0);
-    TEST_TYPE_CONTIG(dxpl_id_c_to_f, signed char, H5T_NATIVE_SCHAR, "schar", windchillFfloat, 1);
-    TEST_TYPE_CONTIG(dxpl_id_c_to_f, short, H5T_NATIVE_SHORT, "short", windchillFfloat, 1);
-    TEST_TYPE_CONTIG(dxpl_id_utrans_inv, unsigned short, H5T_NATIVE_USHORT, "ushort", transformData, 0);
-    TEST_TYPE_CONTIG(dxpl_id_c_to_f, int, H5T_NATIVE_INT, "int", windchillFfloat, 1);
-    TEST_TYPE_CONTIG(dxpl_id_utrans_inv, unsigned int, H5T_NATIVE_UINT, "uint", transformData, 0);
-    TEST_TYPE_CONTIG(dxpl_id_c_to_f, long, H5T_NATIVE_LONG, "long", windchillFfloat, 1);
-    TEST_TYPE_CONTIG(dxpl_id_utrans_inv, unsigned long, H5T_NATIVE_ULONG, "ulong", transformData, 0);
-    TEST_TYPE_CONTIG(dxpl_id_c_to_f, long long, H5T_NATIVE_LLONG, "llong", windchillFfloat, 1);
-    TEST_TYPE_CONTIG(dxpl_id_utrans_inv, unsigned long long, H5T_NATIVE_ULLONG, "ullong", transformData, 0);
-    TEST_TYPE_CONTIG(dxpl_id_c_to_f, float, H5T_NATIVE_FLOAT, "float", windchillFfloat, 1);
-    TEST_TYPE_CONTIG(dxpl_id_c_to_f, double, H5T_NATIVE_DOUBLE, "double", windchillFfloat, 1);
-    TEST_TYPE_CONTIG(dxpl_id_c_to_f, long double, H5T_NATIVE_LDOUBLE, "ldouble", windchillFfloat, 1);
+        /* Run all the tests */
 
-    TEST_TYPE_CHUNK(dxpl_id_utrans_inv, char, H5T_NATIVE_CHAR, "char", transformData, 0);
-    TEST_TYPE_CHUNK(dxpl_id_utrans_inv, unsigned char, H5T_NATIVE_UCHAR, "uchar", transformData, 0);
-    TEST_TYPE_CHUNK(dxpl_id_c_to_f, signed char, H5T_NATIVE_SCHAR, "schar", windchillFfloat, 1);
-    TEST_TYPE_CHUNK(dxpl_id_c_to_f, short, H5T_NATIVE_SHORT, "short", windchillFfloat, 1);
-    TEST_TYPE_CHUNK(dxpl_id_utrans_inv, unsigned short, H5T_NATIVE_USHORT, "ushort", transformData, 0);
-    TEST_TYPE_CHUNK(dxpl_id_c_to_f, int, H5T_NATIVE_INT, "int", windchillFfloat, 1);
-    TEST_TYPE_CHUNK(dxpl_id_utrans_inv, unsigned int, H5T_NATIVE_UINT, "uint", transformData, 0);
-    TEST_TYPE_CHUNK(dxpl_id_c_to_f, long, H5T_NATIVE_LONG, "long", windchillFfloat, 1);
-    TEST_TYPE_CHUNK(dxpl_id_utrans_inv, unsigned long, H5T_NATIVE_ULONG, "ulong", transformData, 0);
-    TEST_TYPE_CHUNK(dxpl_id_c_to_f, long long, H5T_NATIVE_LLONG, "llong", windchillFfloat, 1);
-    TEST_TYPE_CHUNK(dxpl_id_utrans_inv, unsigned long long, H5T_NATIVE_ULLONG, "ullong", transformData, 0);
-    TEST_TYPE_CHUNK(dxpl_id_c_to_f, float, H5T_NATIVE_FLOAT, "float", windchillFfloat, 1);
-    TEST_TYPE_CHUNK(dxpl_id_c_to_f, double, H5T_NATIVE_DOUBLE, "double", windchillFfloat, 1);
-    TEST_TYPE_CHUNK(dxpl_id_c_to_f, long double, H5T_NATIVE_LDOUBLE, "ldouble", windchillFfloat, 1);
+        if (init_test(file_id) < 0)
+            TEST_ERROR;
+        if (test_set() < 0)
+            TEST_ERROR;
+        TEST_TYPE_CONTIG(dxpl_id_utrans_inv, char, H5T_NATIVE_CHAR, "char", transformData, 0);
+        TEST_TYPE_CONTIG(dxpl_id_utrans_inv, unsigned char, H5T_NATIVE_UCHAR, "uchar", transformData, 0);
+        TEST_TYPE_CONTIG(dxpl_id_c_to_f, signed char, H5T_NATIVE_SCHAR, "schar", windchillFfloat, 1);
+        TEST_TYPE_CONTIG(dxpl_id_c_to_f, short, H5T_NATIVE_SHORT, "short", windchillFfloat, 1);
+        TEST_TYPE_CONTIG(dxpl_id_utrans_inv, unsigned short, H5T_NATIVE_USHORT, "ushort", transformData, 0);
+        TEST_TYPE_CONTIG(dxpl_id_c_to_f, int, H5T_NATIVE_INT, "int", windchillFfloat, 1);
+        TEST_TYPE_CONTIG(dxpl_id_utrans_inv, unsigned int, H5T_NATIVE_UINT, "uint", transformData, 0);
+        TEST_TYPE_CONTIG(dxpl_id_c_to_f, long, H5T_NATIVE_LONG, "long", windchillFfloat, 1);
+        TEST_TYPE_CONTIG(dxpl_id_utrans_inv, unsigned long, H5T_NATIVE_ULONG, "ulong", transformData, 0);
+        TEST_TYPE_CONTIG(dxpl_id_c_to_f, long long, H5T_NATIVE_LLONG, "llong", windchillFfloat, 1);
+        TEST_TYPE_CONTIG(dxpl_id_utrans_inv, unsigned long long, H5T_NATIVE_ULLONG, "ullong", transformData,
+                         0);
+        TEST_TYPE_CONTIG(dxpl_id_c_to_f, float, H5T_NATIVE_FLOAT, "float", windchillFfloat, 1);
+        TEST_TYPE_CONTIG(dxpl_id_c_to_f, double, H5T_NATIVE_DOUBLE, "double", windchillFfloat, 1);
+        TEST_TYPE_CONTIG(dxpl_id_c_to_f, long double, H5T_NATIVE_LDOUBLE, "ldouble", windchillFfloat, 1);
 
-    if (test_copy(dxpl_id_c_to_f_copy, dxpl_id_polynomial_copy) < 0)
-        TEST_ERROR;
-    if (test_trivial(dxpl_id_simple) < 0)
-        TEST_ERROR;
-    if (test_poly(dxpl_id_polynomial) < 0)
-        TEST_ERROR;
-    if (test_getset(dxpl_id_c_to_f) < 0)
-        TEST_ERROR;
-    if (test_specials(file_id) < 0)
-        TEST_ERROR;
+        TEST_TYPE_CHUNK(dxpl_id_utrans_inv, char, H5T_NATIVE_CHAR, "char", transformData, 0);
+        TEST_TYPE_CHUNK(dxpl_id_utrans_inv, unsigned char, H5T_NATIVE_UCHAR, "uchar", transformData, 0);
+        TEST_TYPE_CHUNK(dxpl_id_c_to_f, signed char, H5T_NATIVE_SCHAR, "schar", windchillFfloat, 1);
+        TEST_TYPE_CHUNK(dxpl_id_c_to_f, short, H5T_NATIVE_SHORT, "short", windchillFfloat, 1);
+        TEST_TYPE_CHUNK(dxpl_id_utrans_inv, unsigned short, H5T_NATIVE_USHORT, "ushort", transformData, 0);
+        TEST_TYPE_CHUNK(dxpl_id_c_to_f, int, H5T_NATIVE_INT, "int", windchillFfloat, 1);
+        TEST_TYPE_CHUNK(dxpl_id_utrans_inv, unsigned int, H5T_NATIVE_UINT, "uint", transformData, 0);
+        TEST_TYPE_CHUNK(dxpl_id_c_to_f, long, H5T_NATIVE_LONG, "long", windchillFfloat, 1);
+        TEST_TYPE_CHUNK(dxpl_id_utrans_inv, unsigned long, H5T_NATIVE_ULONG, "ulong", transformData, 0);
+        TEST_TYPE_CHUNK(dxpl_id_c_to_f, long long, H5T_NATIVE_LLONG, "llong", windchillFfloat, 1);
+        TEST_TYPE_CHUNK(dxpl_id_utrans_inv, unsigned long long, H5T_NATIVE_ULLONG, "ullong", transformData,
+                        0);
+        TEST_TYPE_CHUNK(dxpl_id_c_to_f, float, H5T_NATIVE_FLOAT, "float", windchillFfloat, 1);
+        TEST_TYPE_CHUNK(dxpl_id_c_to_f, double, H5T_NATIVE_DOUBLE, "double", windchillFfloat, 1);
+        TEST_TYPE_CHUNK(dxpl_id_c_to_f, long double, H5T_NATIVE_LDOUBLE, "ldouble", windchillFfloat, 1);
 
-    /* Close the objects we opened/created */
-    if (H5Dclose(dset_id_int) < 0)
-        TEST_ERROR;
-    if (H5Dclose(dset_id_int_chunk) < 0)
-        TEST_ERROR;
-    if (H5Dclose(dset_id_float) < 0)
-        TEST_ERROR;
-    if (H5Dclose(dset_id_float_chunk) < 0)
-        TEST_ERROR;
-    if (H5Fclose(file_id) < 0)
-        TEST_ERROR;
-    if (H5Pclose(dxpl_id_c_to_f) < 0)
-        TEST_ERROR;
-    if (H5Pclose(dxpl_id_c_to_f_copy) < 0)
-        TEST_ERROR;
-    if (H5Pclose(dxpl_id_polynomial) < 0)
-        TEST_ERROR;
-    if (H5Pclose(dxpl_id_polynomial_copy) < 0)
-        TEST_ERROR;
-    if (H5Pclose(dxpl_id_simple) < 0)
-        TEST_ERROR;
-    if (H5Pclose(dxpl_id_utrans_inv) < 0)
-        TEST_ERROR;
+        if (test_copy(dxpl_id_c_to_f_copy, dxpl_id_polynomial_copy) < 0)
+            TEST_ERROR;
+        if (test_trivial(dxpl_id_simple) < 0)
+            TEST_ERROR;
+        if (test_poly(dxpl_id_polynomial) < 0)
+            TEST_ERROR;
+        if (test_getset(dxpl_id_c_to_f) < 0)
+            TEST_ERROR;
+        if (test_specials(file_id) < 0)
+            TEST_ERROR;
+
+        /* Close the objects we opened/created */
+        if (H5Dclose(dset_id_int) < 0)
+            TEST_ERROR;
+        if (H5Dclose(dset_id_int_chunk) < 0)
+            TEST_ERROR;
+        if (H5Dclose(dset_id_float) < 0)
+            TEST_ERROR;
+        if (H5Dclose(dset_id_float_chunk) < 0)
+            TEST_ERROR;
+        if (H5Fclose(file_id) < 0)
+            TEST_ERROR;
+        if (H5Pclose(dxpl_id_c_to_f) < 0)
+            TEST_ERROR;
+        if (H5Pclose(dxpl_id_c_to_f_copy) < 0)
+            TEST_ERROR;
+        if (H5Pclose(dxpl_id_polynomial) < 0)
+            TEST_ERROR;
+        if (H5Pclose(dxpl_id_polynomial_copy) < 0)
+            TEST_ERROR;
+        if (H5Pclose(dxpl_id_simple) < 0)
+            TEST_ERROR;
+        if (H5Pclose(dxpl_id_utrans_inv) < 0)
+            TEST_ERROR;
+
+#ifdef H5_HAVE_THREADS
+        /* Disable internal threading */
+        if (threads && H5TSset_internal_threads(0) < 0)
+            goto error;
+    }
+#endif /* H5_HAVE_THREADS */
 
     return 0;
 

@@ -58,7 +58,7 @@ if (NOT BUILD_SHARED_LIBS)
   set_source_files_properties (t.c PROPERTIES LANGUAGE C)
   target_include_directories (${HDF5_F90_C_TEST_LIB_TARGET}
       PRIVATE "${HDF5_SRC_INCLUDE_DIRS};${HDF5_SRC_BINARY_DIR};${HDF5_F90_BINARY_DIR};${HDF5_F90_BINARY_DIR}/static;$<$<BOOL:${HDF5_ENABLE_PARALLEL}>:${MPI_C_INCLUDE_DIRS}>"
-      INTERFACE "$<INSTALL_INTERFACE:$<INSTALL_PREFIX>/include>"
+      INTERFACE "$<INSTALL_INTERFACE:$<INSTALL_PREFIX>/${HDF5_INSTALL_INCLUDE_DIR}>"
   )
   target_compile_options (${HDF5_F90_C_TEST_LIB_TARGET} PRIVATE "${HDF5_CMAKE_C_FLAGS}")
   TARGET_C_PROPERTIES (${HDF5_F90_C_TEST_LIB_TARGET} STATIC)
@@ -75,7 +75,7 @@ else ()
   add_library (${HDF5_F90_C_TEST_LIBSH_TARGET} SHARED t.c t.h)
   target_include_directories (${HDF5_F90_C_TEST_LIBSH_TARGET}
       PRIVATE "${HDF5_SRC_INCLUDE_DIRS};${HDF5_SRC_BINARY_DIR};${HDF5_F90_BINARY_DIR};${HDF5_F90_BINARY_DIR}/shared;$<$<BOOL:${HDF5_ENABLE_PARALLEL}>:${MPI_C_INCLUDE_DIRS}>"
-      INTERFACE "$<INSTALL_INTERFACE:$<INSTALL_PREFIX>/include>"
+      INTERFACE "$<INSTALL_INTERFACE:$<INSTALL_PREFIX>/${HDF5_INSTALL_INCLUDE_DIR}>"
   )
   target_compile_options (${HDF5_F90_C_TEST_LIBSH_TARGET} PRIVATE "${HDF5_CMAKE_C_FLAGS}")
   target_compile_definitions (${HDF5_F90_C_TEST_LIBSH_TARGET} PUBLIC "H5_BUILT_AS_DYNAMIC_LIB")
@@ -103,24 +103,16 @@ if (HDF5_ENABLE_FORMATTERS)
 endif ()
 
 if (NOT EXISTS "${HDF5_GENERATED_SOURCE_DIR}/tf_gen.F90")
-  message (STATUS "No pre-generated tf_gen.F90 file found - generating one")
-  if (CMAKE_CROSSCOMPILING)
-    add_custom_command (TARGET H5_test_buildiface POST_BUILD
-        BYPRODUCTS ${HDF5_FORTRAN_TESTS_BINARY_DIR}/tf_gen.F90
-        COMMAND    ${CMAKE_COMMAND}
-        ARGS       -E env ${CROSSCOMPILING_PATH}
-        COMMAND    $<TARGET_FILE:H5_test_buildiface>
-        WORKING_DIRECTORY ${HDF5_FORTRAN_TESTS_BINARY_DIR}
-        COMMENT "Generating the tf_gen.F90 static file"
-    )
-  else ()
-    add_custom_command (TARGET H5_test_buildiface POST_BUILD
-        BYPRODUCTS ${HDF5_FORTRAN_TESTS_BINARY_DIR}/tf_gen.F90
-        COMMAND    $<TARGET_FILE:H5_test_buildiface>
-        WORKING_DIRECTORY ${HDF5_FORTRAN_TESTS_BINARY_DIR}
-        COMMENT "Generating the tf_gen.F90 static file"
-    )
+  if (CMAKE_CROSSCOMPILING AND NOT CMAKE_CROSSCOMPILING_EMULATOR)
+    message (FATAL_ERROR "No pre-generated tf_gen.F90 file found - cannot generate without cross-compiling emulator")
   endif ()
+  message (STATUS "No pre-generated tf_gen.F90 file found - generating one")
+  add_custom_command (TARGET H5_test_buildiface POST_BUILD
+      BYPRODUCTS ${HDF5_FORTRAN_TESTS_BINARY_DIR}/tf_gen.F90
+      COMMAND ${CMAKE_CROSSCOMPILING_EMULATOR} $<TARGET_FILE:H5_test_buildiface>
+      WORKING_DIRECTORY ${HDF5_FORTRAN_TESTS_BINARY_DIR}
+      COMMENT "Generating the tf_gen.F90 static file"
+  )
 else ()
   message (STATUS "Using existing pre-generated tf_gen.F90 file")
   add_custom_command (
@@ -187,7 +179,7 @@ if (NOT BUILD_SHARED_LIBS)
   add_library (${HDF5_F90_TEST_LIB_TARGET} STATIC ${HDF5_F90_TF_SOURCES})
   target_include_directories (${HDF5_F90_TEST_LIB_TARGET}
       PRIVATE "${CMAKE_Fortran_MODULE_DIRECTORY}/static;${HDF5_F90_BINARY_DIR};${HDF5_F90_BINARY_DIR}/static"
-      INTERFACE "$<INSTALL_INTERFACE:$<INSTALL_PREFIX>/include/static>"
+      INTERFACE "$<INSTALL_INTERFACE:$<INSTALL_PREFIX>/${HDF5_INSTALL_INCLUDE_DIR}/static>"
   )
   target_compile_options (${HDF5_F90_TEST_LIB_TARGET} PRIVATE "${HDF5_CMAKE_Fortran_FLAGS}")
   target_compile_definitions (${HDF5_F90_TEST_LIB_TARGET}
@@ -211,7 +203,7 @@ else ()
   add_library (${HDF5_F90_TEST_LIBSH_TARGET} SHARED ${HDF5_F90_TF_SOURCES_SHARED})
   target_include_directories (${HDF5_F90_TEST_LIBSH_TARGET}
       PRIVATE "${CMAKE_Fortran_MODULE_DIRECTORY}/shared;${HDF5_F90_BINARY_DIR};${HDF5_F90_BINARY_DIR}/shared"
-      INTERFACE "$<INSTALL_INTERFACE:$<INSTALL_PREFIX>/include/shared>"
+      INTERFACE "$<INSTALL_INTERFACE:$<INSTALL_PREFIX>/${HDF5_INSTALL_INCLUDE_DIR}/shared>"
   )
   target_compile_options (${HDF5_F90_TEST_LIBSH_TARGET} PRIVATE "${HDF5_CMAKE_Fortran_FLAGS}")
   target_compile_definitions (${HDF5_F90_TEST_LIBSH_TARGET}

@@ -2011,7 +2011,7 @@ filled according to the value of this property. The padding can be:
  * calculates the offset of member \Emph{m} within struct \Emph{s}. Alternatively, the
  * `offsetof(s, m)` macro, defined in \Emph{stddef.h}, serves the same purpose as the
  * `HOFFSET` macro. For Fortran users, the HDF5 library provides the function
- * \ref h5lib.h5offsetof to determine the offset of a member. To find the size of a
+ * \ref h5lib::h5offsetof to determine the offset of a member. To find the size of a
  * scalar derived type, the Fortran function equivalent of the \Emph{sizeof} can be used.
  * Note, in the past, the HDF5 Fortran applications had to calculate offsets by using sizes of
  * members datatypes and by considering the order of members in the Fortran derived type, thus
@@ -4012,8 +4012,9 @@ filled according to the value of this property. The padding can be:
  *               H5T_FLOAT_BFLOAT16BE | H5T_FLOAT_BFLOAT16LE |
  *               H5T_FLOAT_F8E4M3 | H5T_FLOAT_F8E5M2 |
  *               H5T_FLOAT_F6E2M3 | H5T_FLOAT_F6E3M2 |
- *               H5T_NATIVE_FLOAT16 | H5T_NATIVE_FLOAT |
- *               H5T_NATIVE_DOUBLE | H5T_NATIVE_LDOUBLE
+ *               H5T_FLOAT_F4E2M1 | H5T_NATIVE_FLOAT16 |
+ *               H5T_NATIVE_FLOAT | H5T_NATIVE_DOUBLE |
+ *               H5T_NATIVE_LDOUBLE
  *
  *   <time> ::= H5T_TIME: not yet implemented
  *

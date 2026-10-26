@@ -103,11 +103,24 @@ set (HDF5_JAVADOC_HDF_HDF5_STRUCTS_SOURCES
     structs/package-info.java
 )
 
+#-----------------------------------------------------------------------------
+# Generate H5Version.java with version information from H5public.h
+# This ensures the Java version constants match the C library version
+# Uses shared template from java/templates/
+#-----------------------------------------------------------------------------
+configure_file (
+    ${HDF5_SOURCE_DIR}/java/templates/H5Version.java.in
+    ${CMAKE_CURRENT_BINARY_DIR}/H5Version.java
+    @ONLY
+)
+
+# Use sources from both source and binary directories
 set (HDF5_JAVA_HDF_HDF5_SOURCES
     HDFArray.java
     HDF5Constants.java
     HDFNativeData.java
     H5.java
+    ${CMAKE_CURRENT_BINARY_DIR}/H5Version.java
 )
 
 set (HDF5_JAVADOC_HDF_HDF5_SOURCES
@@ -195,6 +208,9 @@ if (HDF5_ENABLE_MAVEN_DEPLOY)
   # Export both JARs for installation
   SET_GLOBAL_VARIABLE (HDF5_JAVA_JARS_TO_EXPORT "${HDF5_JAVA_JARS_TO_EXPORT};${HDF5_JAVA_UNIVERSAL_JAR_FILE}")
   SET_GLOBAL_VARIABLE (HDF5_MAVEN_PLATFORM_JAR_FILE "${HDF5_JAVA_PLATFORM_JAR_FILE}")
+
+  # Set HDF5_JAVA_LIBRARY for examples to depend on
+  SET_GLOBAL_VARIABLE (HDF5_JAVA_LIBRARY ${HDF5_JAVA_UNIVERSAL_TARGET})
 else ()
   # Standard JAR creation without Maven classifiers
   add_jar (${HDF5_JAVA_HDF5_LIB_TARGET} OUTPUT_NAME "${HDF5_JAVA_HDF5_LIB_TARGET}-${HDF5_PACKAGE_VERSION}" MANIFEST ${PROJECT_BINARY_DIR}/Manifest.txt ${HDF5_JAVA_HDF_HDF5_CALLBACKS_SOURCES} ${HDF5_JAVA_HDF_HDF5_EXCEPTIONS_SOURCES} ${HDF5_JAVA_HDF_HDF5_STRUCTS_SOURCES} ${HDF5_JAVA_HDF_HDF5_SOURCES})
@@ -203,6 +219,9 @@ else ()
   get_target_property (${HDF5_JAVA_HDF5_LIB_TARGET}_JAR_FILE ${HDF5_JAVA_HDF5_LIB_TARGET} JAR_FILE)
   SET_GLOBAL_VARIABLE (HDF5_JAVA_JARS "${HDF5_JAVA_JARS};${${HDF5_JAVA_HDF5_LIB_TARGET}_JAR_FILE}")
   SET_GLOBAL_VARIABLE (HDF5_JAVA_JARS_TO_EXPORT "${HDF5_JAVA_JARS_TO_EXPORT};${${HDF5_JAVA_HDF5_LIB_TARGET}_JAR_FILE}")
+
+  # Set HDF5_JAVA_LIBRARY for examples to depend on
+  SET_GLOBAL_VARIABLE (HDF5_JAVA_LIBRARY ${HDF5_JAVA_HDF5_LIB_TARGET})
 endif ()
 
 # Always export the platform-specific JAR for reference (used by Maven deployment)
@@ -212,9 +231,6 @@ SET_GLOBAL_VARIABLE (HDF5_JAVA_JARS_TO_EXPORT "${HDF5_JAVA_JARS_TO_EXPORT};${${H
 message (STATUS "HDF5 JNI java lib: ${HDF5_JAVA_JNI_LIB_TARGET} jar: ${HDF5_JAVA_HDF5_LIB_TARGET}")
 add_dependencies (${HDF5_JAVA_HDF5_LIB_TARGET} ${HDF5_JAVA_JNI_LIB_TARGET})
 set_target_properties (${HDF5_JAVA_HDF5_LIB_TARGET} PROPERTIES FOLDER libraries/java)
-
-# Set HDF5_JAVA_LIBRARY for examples to depend on
-SET_GLOBAL_VARIABLE (HDF5_JAVA_LIBRARY ${HDF5_JAVA_HDF5_LIB_TARGET})
 
 #-----------------------------------------------------------------------------
 # Maven POM Generation

@@ -3989,6 +3989,14 @@ H5S__hyper_serialize(H5S_t *space, uint8_t **p)
     pp = (*p);
     assert(pp);
 
+    /* A hyperslab selection is meaningless on a scalar/null dataspace. This
+     * state can arise if the extent is collapsed to a scalar after the
+     * selection was made, since changing the extent does not reset an
+     * existing hyperslab selection. */
+    if (0 == space->extent.rank)
+        HGOTO_ERROR(H5E_DATASPACE, H5E_BADVALUE, FAIL,
+                    "cannot serialize hyperslab selection with a rank of 0");
+
     /* Set some convenience values */
     ndims   = space->extent.rank;
     diminfo = space->select.sel_info.hslab->diminfo.opt;
@@ -4240,25 +4248,33 @@ done:
 static herr_t
 H5S__hyper_deserialize(H5S_t **space, const uint8_t **p, const size_t p_size, bool skip)
 {
-    H5S_t *tmp_space = NULL;                    /* Pointer to actual dataspace to use,
-                                                   either *space or a newly allocated one */
-    hsize_t        dims[H5S_MAX_RANK];          /* Dimension sizes */
-    hsize_t        start[H5S_MAX_RANK];         /* hyperslab start information */
-    hsize_t        block[H5S_MAX_RANK];         /* hyperslab block information */
-    uint32_t       version;                     /* Version number */
-    uint8_t        flags    = 0;                /* Flags */
-    uint8_t        enc_size = 0;                /* Encoded size of selection info */
-    unsigned       rank;                        /* rank of points */
-    const uint8_t *pp;                          /* Local pointer for decoding */
-    unsigned       u;                           /* Local counting variable */
-    herr_t         ret_value = FAIL;            /* return value */
-    const uint8_t *p_end     = *p + p_size - 1; /* Pointer to last valid byte in buffer */
+    H5S_t *tmp_space = NULL;            /* Pointer to actual dataspace to use,
+                                           either *space or a newly allocated one */
+    hsize_t        dims[H5S_MAX_RANK];  /* Dimension sizes */
+    hsize_t        start[H5S_MAX_RANK]; /* hyperslab start information */
+    hsize_t        block[H5S_MAX_RANK]; /* hyperslab block information */
+    uint32_t       version;             /* Version number */
+    uint8_t        flags    = 0;        /* Flags */
+    uint8_t        enc_size = 0;        /* Encoded size of selection info */
+    unsigned       rank;                /* rank of points */
+    const uint8_t *pp;                  /* Local pointer for decoding */
+    unsigned       u;                   /* Local counting variable */
+    herr_t         ret_value = FAIL;    /* return value */
+    const uint8_t *p_end;
+
     FUNC_ENTER_PACKAGE
 
     /* Check args */
     assert(p);
     pp = (*p);
     assert(pp);
+
+    if (skip)
+        p_end = *p;
+    else if (p_size == 0)
+        HGOTO_ERROR(H5E_DATASPACE, H5E_OVERFLOW, FAIL, "empty hyperslab selection buffer");
+    else
+        p_end = *p + p_size - 1; /* Pointer to last valid byte in buffer */
 
     /* As part of the efforts to push all selection-type specific coding
        to the callbacks, the coding for the allocation of a null dataspace
@@ -4322,6 +4338,9 @@ H5S__hyper_deserialize(H5S_t **space, const uint8_t **p, const size_t p_size, bo
     if (H5_IS_KNOWN_BUFFER_OVERFLOW(skip, pp, sizeof(uint32_t), p_end))
         HGOTO_ERROR(H5E_DATASPACE, H5E_OVERFLOW, FAIL, "buffer overflow while decoding selection rank");
     UINT32DECODE(pp, rank);
+    if (0 == rank || rank > H5S_MAX_RANK)
+        HGOTO_ERROR(H5E_DATASPACE, H5E_BADVALUE, FAIL, "invalid rank (%u) for serialized hyperslab selection",
+                    rank);
 
     if (!*space) {
         /* Patch the rank of the allocated dataspace */

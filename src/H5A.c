@@ -1221,7 +1221,8 @@ done:
     Up to 'buf_size'-1 characters are stored in 'buf' followed by a '\0' string
     terminator.  If the name of the attribute is longer than 'buf_size'-1,
     the string terminator is stored in the last position of the buffer to
-    properly terminate the string.
+    properly terminate the string.  If 'buf' is non-NULL but 'buf_size' is 0,
+    treat the call as length being queried.
 --------------------------------------------------------------------------*/
 ssize_t
 H5Aget_name(hid_t attr_id, size_t buf_size, char *buf /*out*/)
@@ -1232,6 +1233,10 @@ H5Aget_name(hid_t attr_id, size_t buf_size, char *buf /*out*/)
     ssize_t              ret_value     = -1; /* Return value */
 
     FUNC_ENTER_API((-1))
+
+    /* If buffer size is zero, treat as length query and do not write, even a '\0' */
+    if (buf && buf_size == 0)
+        buf = NULL;
 
     /* check arguments */
     if (NULL == (vol_obj = H5VL_vol_object_verify(attr_id, H5I_ATTR)))
@@ -1294,6 +1299,10 @@ H5Aget_name_by_idx(hid_t loc_id, const char *obj_name, H5_index_t idx_type, H5_i
     ssize_t              ret_value;         /* Return value */
 
     FUNC_ENTER_API(FAIL)
+
+    /* If buffer size is zero, treat as length query and do not write, even a '\0' */
+    if (name && size == 0)
+        name = NULL;
 
     /* Check args */
     if (H5I_ATTR == H5I_get_type(loc_id))
@@ -1860,6 +1869,8 @@ H5Aiterate2(hid_t loc_id, H5_index_t idx_type, H5_iter_order_t order, hsize_t *i
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "invalid index type specified");
     if (order <= H5_ITER_UNKNOWN || order >= H5_ITER_N)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "invalid iteration order specified");
+    if (op == NULL)
+        HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "no operator specified");
 
     /* Get the loc object */
     if (NULL == (vol_obj = H5VL_vol_object(loc_id)))
@@ -1949,6 +1960,8 @@ H5Aiterate_by_name(hid_t loc_id, const char *obj_name, H5_index_t idx_type, H5_i
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "invalid index type specified");
     if (order <= H5_ITER_UNKNOWN || order >= H5_ITER_N)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "invalid iteration order specified");
+    if (op == NULL)
+        HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "no operator specified");
 
     /* Verify access property list and set up collective metadata if appropriate */
     if (H5CX_set_apl(&lapl_id, H5P_CLS_LACC, loc_id, false) < 0)

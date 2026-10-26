@@ -446,9 +446,10 @@ done:
  * Purpose:  Call back function from h5trav_visit().
  *------------------------------------------------------------------------*/
 static herr_t
-trav_grp_objs(const char *path, const H5O_info2_t *oinfo, const char *already_visited, void *udata)
+trav_grp_objs(const char *path, const H5O_info2_t *oinfo, bool already_visited,
+              const trav_seen_t *visited_obj_info, void *udata)
 {
-    trav_info_visit_obj(path, oinfo, already_visited, udata);
+    trav_info_visit_obj(path, oinfo, already_visited, visited_obj_info, udata);
 
     return 0;
 }
@@ -1037,8 +1038,8 @@ h5diff(const char *fname1, const char *fname2, const char *objname1, const char 
             MPI_Abort(MPI_COMM_WORLD, 0);
         } /* end if */
 
-        strcpy(filenames[0], fname1);
-        strcpy(filenames[1], fname2);
+        snprintf(filenames[0], MAX_FILENAME, "%s", fname1);
+        snprintf(filenames[1], MAX_FILENAME, "%s", fname2);
 
         /* Alert the worker tasks that there's going to be work. */
         for (int i = 1; i < g_nTasks; i++)

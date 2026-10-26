@@ -4,12 +4,20 @@ name: OpenBSD CI
 on:
   workflow_dispatch:
   push:
+    paths-ignore:
+      - '.github/CODEOWNERS'
+      - '.github/FUNDING.yml'
+      - 'docs/**'
+      - 'release_docs/**'
+      - 'ACKNOWLEDGEMENTS'
+      - 'LICENSE**'
+      - '**.md'
   pull_request:
     branches: [ develop ]
     paths-ignore:
       - '.github/CODEOWNERS'
       - '.github/FUNDING.yml'
-      - 'doc/**'
+      - 'docs/**'
       - 'release_docs/**'
       - 'ACKNOWLEDGEMENTS'
       - 'LICENSE**'
@@ -37,25 +45,24 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        openbsd-version: ['7.5']
+        openbsd-version: ['8.0']
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Build and test on OpenBSD
-        uses: vmactions/openbsd-vm@2e29de1eb150dfe1c9c97b84ff2b7896f14ca690 # v1
+        uses: vmactions/openbsd-vm@f1ca8bc8ecc5b6ef7218e5b914836e067e1546d3 # v1.4.9
         with:
           release: ${{ matrix.openbsd-version }}
           usesh: true
           prepare: |
             echo "https://ftp.openbsd.org/pub/OpenBSD" > /etc/installurl
-            pkg_add cmake gmake pkgconf curl gcc-11.2.0p11
+            pkg_add cmake pkgconf curl
           run: |
             set -e
-
-            # Set up library path for gcc
-            export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
 
             # Get number of processors (OpenBSD uses sysctl in /sbin)
             NPROC=$(/sbin/sysctl -n hw.ncpu)
@@ -67,9 +74,6 @@ jobs:
             cmake -C ../config/cmake/cacheinit.cmake \
               --log-level=VERBOSE \
               -DCMAKE_BUILD_TYPE=Release \
-              -DCMAKE_C_COMPILER=egcc \
-              -DCMAKE_CXX_COMPILER=eg++ \
-              -DCMAKE_MAKE_PROGRAM=gmake \
               -DBUILD_SHARED_LIBS:BOOL=ON \
               -DHDF5_ENABLE_ALL_WARNINGS:BOOL=ON \
               -DHDF5_ENABLE_PARALLEL:BOOL=OFF \

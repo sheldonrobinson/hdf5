@@ -24,7 +24,7 @@ endif ()
 if (NOT TEST_OUTPUT) # the output file to capture the test program output
   message (FATAL_ERROR "Require TEST_OUTPUT to be defined")
 endif ()
-if (NOT TEST_EXPECT)
+if (NOT DEFINED TEST_EXPECT)
   message (VERBOSE "Optional TEST_EXPECT is not defined")
 endif ()
 
@@ -42,6 +42,7 @@ EXECUTE_TEST (TEST_FOLDER ${TEST_FOLDER}
                TEST_LIBRARY_DIRECTORY ${TEST_LIBRARY_DIRECTORY}
                TEST_ENV_VAR ${TEST_ENV_VAR}
                TEST_ENV_VALUE ${TEST_ENV_VALUE}
+               TEST_KEYSTORE_DIR ${TEST_KEYSTORE_DIR}
                TEST_INPUT ${TEST_INPUT}
                TEST_CLASSPATH ${TEST_CLASSPATH}
                TEST_NOERRDISPLAY ${TEST_NOERRDISPLAY}

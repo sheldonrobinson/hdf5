@@ -5405,8 +5405,8 @@ H5_DLL herr_t H5Pset_object_flush_cb(hid_t plist_id, H5F_flush_cb_t func, void *
  *          the dataset being read in for hyperslab selections boosts
  *          performance by quite a bit.
  *
- *          The default value is set to 64KB, indicating that file I/O for raw
- *          data reads and writes will occur in at least 64KB blocks. Setting
+ *          The default value is set to 64KiB, indicating that file I/O for raw
+ *          data reads and writes will occur in at least 64KiB blocks. Setting
  *          the value to zero (\TText{0}) with this API function will turn off
  *          the data sieving, even if the VFL driver attempts to use that
  *          strategy.
@@ -5762,6 +5762,17 @@ H5_DLL herr_t H5Pset_mdc_image_config(hid_t plist_id, H5AC_cache_image_config_t 
  *          is not set to paged or the page size for the file space strategy is
  *          larger than the page buffer size, the subsequent call to H5Fcreate()
  *          using the \p plist_id will fail.
+ *
+ *          The arguments min_meta_perc and min_raw_perc are to prevent one type
+ *          of data from evicting hot pages of the other type, that is, pushing
+ *          them out of the buffer.  Setting a minimum percentage for each type
+ *          reserves a portion of the page buffer for that type, ensuring both
+ *          metadata and raw data can maintain a presence in the buffer.
+ *
+ *          The following constraints apply to min_meta_perc and min_raw_perc:
+ *          - Each must be between 0 and 100 inclusive
+ *          - Their sum must not exceed 100, that is, together they can't reserve
+ *            more than the entire page buffer.
  *
  * \note    As of HDF5 1.14.4, this property will be ignored when an existing
  *          file is being opened and the file space strategy stored in the
@@ -8788,6 +8799,62 @@ H5_DLL herr_t H5Pset_modify_write_buf(hid_t plist_id, bool modify_write_buf);
  *
  */
 H5_DLL herr_t H5Pget_modify_write_buf(hid_t plist_id, bool *modify_write_buf);
+
+#ifdef H5_HAVE_THREADS
+/**
+ *
+ * \ingroup DXPL
+ *
+ * \brief Allows the library to use internal multithreading to accelerate I/O
+ *
+ * \dxpl_id{plist_id}
+ * \param[in] io_threads_enabled Whether the library can use internal multithreading to accelerate I/O
+ *
+ * \return \herr_t
+ *
+ * \details H5Pset_io_threads() sets whether the library is allowed to use internal multithreading to
+ * accelerate I/O. By default this is set to true. However, internal threading must be enabled using
+ * H5TSset_internal_threads() before the library can use threads to accelerate I/O.
+ * H5Pset_io_threads() can be used to disable this acceleration for a specific operation even if
+ * internal threading is enabled globally.
+ *
+ * \note    This function is only present when the library is built with
+ *          thread support, i.e. when \c H5_HAVE_THREADS is defined.  This is
+ *          the usual case; the exceptions are builds without a threading
+ *          package and static libraries on Windows.
+ *
+ * \since 2.3.0
+ *
+ */
+H5_DLL herr_t H5Pset_io_threads(hid_t plist_id, bool io_threads_enabled);
+
+/**
+ *
+ * \ingroup DXPL
+ *
+ * \brief Retrieves the "I/O threads enabled" property
+ *
+ * \dxpl_id{plist_id}
+ * \param[out] io_threads_enabled Whether the library can use internal multithreading to accelerate I/O
+ *
+ * \return \herr_t
+ *
+ * \details H5Pget_io_threads() gets the "I/O threads enabled" property from the dataset transfer
+ * property list \p plist_id. This property determines whether the library is allowed to use internal
+ * multithreading to accelerate I/O. The default value for io_threads_enabled is true. However,
+ * internal threading must be enabled using H5TSset_internal_threads() before the library can use
+ * threads to accelerate I/O.
+ *
+ * \note    This function is only present when the library is built with
+ *          thread support, i.e. when \c H5_HAVE_THREADS is defined.  This is
+ *          the usual case; the exceptions are builds without a threading
+ *          package and static libraries on Windows.
+ *
+ * \since 2.3.0
+ *
+ */
+H5_DLL herr_t H5Pget_io_threads(hid_t plist_id, bool *io_threads_enabled);
+#endif /* H5_HAVE_THREADS */
 
 /**
  * \ingroup LCPL

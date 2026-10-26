@@ -41,6 +41,7 @@ set (LIST_HDF5_TEST_FILES
     textlink.h5
     textlinksrc.h5
     textlinktar.h5
+    tfloat4.h5
     tfloat6.h5
     tfloat8.h5
     tfloat16.h5
@@ -49,6 +50,7 @@ set (LIST_HDF5_TEST_FILES
     tgrp_comments.h5
     tgrpnullspace.h5
     thlink.h5
+    tintascii.h5
     tloop.h5
     tnestedcomp.h5
     tsaf.h5
@@ -85,7 +87,6 @@ set (LIST_OTHER_TEST_FILES
     tdset-1.ls
     tdset2-1.ls
     tdset_idx-1.ls
-    tdset_idx-2.ls
     tempty.ls
     textlink-1.ls
     textlinksrc-1.ls
@@ -102,6 +103,7 @@ set (LIST_OTHER_TEST_FILES
     textlinksrc-7-old.ls
     textlinksrc-nodangle-1.ls
     textlinksrc-nodangle-2.ls
+    tfloat4.ls
     tfloat6.ls
     tfloat8.ls
     tfloat16.ls
@@ -116,6 +118,7 @@ set (LIST_OTHER_TEST_FILES
     tgrp_comments.ls
     thlinks-nodangle-1.ls
     thlink-1.ls
+    tintascii.ls
     tloop-1.ls
     tmultifile.ls
     tnestcomp-1.ls
@@ -138,9 +141,12 @@ set (LIST_OTHER_TEST_FILES
     tvldtypes2be.ls
 )
 
-set (LIST_OTHER_TEST_FILES_LE
+# Expected output that depends on the host byte order; a big-endian host
+# uses <name>BE.ls instead of <name>.ls
+set (LIST_OTHER_TEST_FILES_END
     tall-3
     tdset2-2
+    tdset_idx-2
 )
 
 set (H5LS_S3PROXY_TEST_FILES
@@ -243,6 +249,9 @@ add_custom_target (h5ls_vol_files ALL COMMENT "Copying files needed by h5ls test
 # OPTIONAL KEYWORD ARGUMENTS:
 # RESULT_ERRCHECK <string> - value to pass to test script as TEST_ERRREF
 #                            Ignored if memchecker is enabled.
+# FILTER_IN <regex>        - text in the output and reference to replace before
+#                            comparing them. Ignored if memchecker is enabled.
+# FILTER_OUT <string>      - replacement text for FILTER_IN
 #
 # OPTIONAL FLAGS:
 # WILL_FAIL - indicates that the test is expected to fail. Defaults to false
@@ -252,7 +261,7 @@ add_custom_target (h5ls_vol_files ALL COMMENT "Copying files needed by h5ls test
 macro (ADD_H5_TEST testname)
   cmake_parse_arguments (ARG
       "WILL_FAIL;SKIP_TEST;NATIVE_ONLY" # flags
-      "RESULT_CODE;RESULT_ERRCHECK" # one-value args
+      "RESULT_CODE;RESULT_ERRCHECK;FILTER_IN;FILTER_OUT" # one-value args
       "" # multi-value args
       ${ARGN}
   )
@@ -303,6 +312,8 @@ macro (ADD_H5_TEST testname)
               -D "TEST_EXPECT=${ARG_RESULT_CODE}"
               -D "TEST_ERRREF=${ARG_RESULT_ERRCHECK}"
               -D "TEST_REFERENCE=${testname}.ls"
+              -D "TEST_FILTER:STRING=${ARG_FILTER_IN}"
+              -D "TEST_FILTER_REPLACE:STRING=${ARG_FILTER_OUT}"
               -P "${HDF_RESOURCES_DIR}/runTest.cmake"
       )
     endif ()
@@ -312,7 +323,6 @@ macro (ADD_H5_TEST testname)
     endif ()
 
     set_tests_properties (${vol_prefix}H5LS-${testname} PROPERTIES
-        ENVIRONMENT "${CROSSCOMPILING_PATH}"
         WORKING_DIRECTORY "${vol_workdir}"
     )
 
@@ -348,10 +358,10 @@ macro (ADD_H5_UD_TEST testname resultcode resultfile)
             -D "TEST_ENV_VAR=HDF5_PLUGIN_PATH"
             -D "TEST_ENV_VALUE=${CMAKE_BINARY_DIR}/plugins"
             -D "TEST_LIBRARY_DIRECTORY=${CMAKE_TEST_OUTPUT_DIRECTORY}"
+            $<$<BOOL:${HDF5_REQUIRE_SIGNED_PLUGINS}>:-DTEST_KEYSTORE_DIR=${CMAKE_BINARY_DIR}/test_keystore>
             -P "${HDF_RESOURCES_DIR}/runTest.cmake"
     )
     set_tests_properties (H5LS_UD-${testname}-${resultfile} PROPERTIES
-        ENVIRONMENT "${CROSSCOMPILING_PATH}"
         WORKING_DIRECTORY "${PROJECT_BINARY_DIR}/testfiles"
     )
     if ("H5LS_UD-${testname}-${resultfile}" MATCHES "${HDF5_DISABLE_TESTS_REGEX}")
@@ -384,7 +394,7 @@ macro (ADD_H5_S3TEST resultfile resultcode credtype urlscheme urlpath)
   endif ()
   set_tests_properties (H5LS_S3TEST-${resultfile}_${urlscheme}_${credtype} PROPERTIES
       FIXTURES_REQUIRED h5ls_s3_proxy
-      ENVIRONMENT "${h5ls_s3tests_env};${CROSSCOMPILING_PATH}"
+      ENVIRONMENT "${h5ls_s3tests_env}"
       WORKING_DIRECTORY ${PROJECT_BINARY_DIR}/S3TEST
   )
   if ("H5LS_S3TEST-${resultfile}_${urlscheme}_${credtype}" MATCHES "${HDF5_DISABLE_TESTS_REGEX}")
@@ -515,6 +525,9 @@ ADD_H5_TEST (tfloat8 RESULT_CODE 0 -w80 -v tfloat8.h5)
 # test for FP6 types
 ADD_H5_TEST (tfloat6 RESULT_CODE 0 -w80 -v tfloat6.h5)
 
+# test for FP4 type
+ADD_H5_TEST (tfloat4 RESULT_CODE 0 -w80 -v tfloat4.h5)
+
 # tests for complex numbers
 if (${${HDF_PREFIX}_HAVE_COMPLEX_NUMBERS})
   # If support is available for complex numbers, the second test
@@ -554,6 +567,14 @@ ADD_H5_TEST (tmultifile RESULT_CODE 0 -w80 thlink.h5 tslink.h5)
 
 # tests for hard links
 ADD_H5_TEST (thlink-1 RESULT_CODE 0 -w80 thlink.h5)
+
+# test printing characters in ASCII instead of decimal
+# mask the type name to avoid endian-related disagreements between machines
+# over a 1-byte type
+ADD_H5_TEST (tintascii RESULT_CODE 0
+    FILTER_IN "Type:      (native signed char|8-bit integer)"
+    FILTER_OUT "Type:      XXXX"
+    -w80 -vldrs tintascii.h5)
 
 # tests for compound data types
 ADD_H5_TEST (tcomp-1 RESULT_CODE 0 -w80 -r -d tcompound.h5)

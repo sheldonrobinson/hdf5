@@ -4,12 +4,20 @@ name: cve dev
 on:
   workflow_dispatch:
   push:
+    paths-ignore:
+      - '.github/CODEOWNERS'
+      - '.github/FUNDING.yml'
+      - 'docs/**'
+      - 'release_docs/**'
+      - 'ACKNOWLEDGEMENTS'
+      - 'LICENSE**'
+      - '**.md'
   pull_request:
     branches: [ develop ]
     paths-ignore:
       - '.github/CODEOWNERS'
       - '.github/FUNDING.yml'
-      - 'doc/**'
+      - 'docs/**'
       - 'release_docs/**'
       - 'ACKNOWLEDGEMENTS'
       - 'LICENSE**'
@@ -28,18 +36,23 @@ jobs:
     name: CVE regression
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false # Prevents tokens from being written to Git config files
 
       - name: Install HDF5
+        env:
+          RUNNER_WORKSPACE: ${{ runner.workspace }}
         run: |
-          mkdir "${{ runner.workspace }}/build"
-          cd "${{ runner.workspace }}/build"
+          mkdir "$RUNNER_WORKSPACE/build"
+          cd "$RUNNER_WORKSPACE/build"
           cmake -DCMAKE_INSTALL_PREFIX=/usr/local -DBUILD_TESTING:BOOL=OFF $GITHUB_WORKSPACE
           make
           sudo make install
       - name: Checkout CVE test repository
-        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          persist-credentials: false # Prevents tokens from being written to Git config files
           repository: HDFGroup/cve_hdf5
           path: cve_hdf5
       - name: Run regression tests

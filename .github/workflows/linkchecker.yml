@@ -18,7 +18,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false # Prevents tokens from being written to Git config files
 
       - name: Install System Dependencies
         run: |
@@ -40,7 +42,7 @@ jobs:
 
       - name: Run Comprehensive Link Check
         id: lychee
-        uses: lycheeverse/lychee-action@a8c4c7cb88f0c7386610c35eb25108e448569cb0 # v2.7.0
+        uses: lycheeverse/lychee-action@e7477775783ea5526144ba13e8db5eec57747ce8 # v2.9.0
         with:
           args: >
             --base ${{ steps.build_docs.outputs.html_path }}
@@ -70,6 +72,9 @@ jobs:
             --exclude "reddit.com"
             --exclude "twitter.com"
             --exclude "linkedin.com"
+            --exclude "web.cels.anl.gov"
+            --exclude "www.doxygen.org"
+            --exclude "www.doxygen.nl"
             "${{ steps.build_docs.outputs.html_path }}/**/*.html"
           output: lychee-report.md
           format: markdown
@@ -79,13 +84,15 @@ jobs:
 
       - name: Publish Report to Job Summary
         if: always()
+        env:
+          LYCHEE_OUTCOME: ${{ steps.lychee.outcome }}
         run: |
           echo "## 🔗 Link Checker Report" >> "$GITHUB_STEP_SUMMARY"
 
           # Check if lychee step succeeded or failed
-          if [ "${{ steps.lychee.outcome }}" = "success" ]; then
+          if [ "$LYCHEE_OUTCOME" = "success" ]; then
             echo "✅ **No broken links found!**" >> "$GITHUB_STEP_SUMMARY"
-          elif [ "${{ steps.lychee.outcome }}" = "failure" ]; then
+          elif [ "$LYCHEE_OUTCOME" = "failure" ]; then
             # Count actual broken links marked with the ❌ emoji.
             # Default to 0 if grep finds nothing or fails.
             FAILED_COUNT=$(grep -c "❌" lychee-report.md 2>/dev/null || echo 0)

@@ -31,8 +31,8 @@ static size_t H5Z__filter_deflate(unsigned flags, size_t cd_nelmts, const unsign
                                   size_t *buf_size, void **buf);
 
 /* This message derives from H5Z */
-const H5Z_class2_t H5Z_DEFLATE[1] = {{
-    H5Z_CLASS_T_VERS,    /* H5Z_class_t version */
+static const H5Z_class3_t H5Z_DEFLATE[1] = {{
+    H5Z_CLASS_T_VERS_3,  /* H5Z_class_t version */
     H5Z_FILTER_DEFLATE,  /* Filter id number		*/
     1,                   /* encoder_present flag (set to true) */
     1,                   /* decoder_present flag (set to true) */
@@ -40,7 +40,32 @@ const H5Z_class2_t H5Z_DEFLATE[1] = {{
     NULL,                /* The "can apply" callback     */
     NULL,                /* The "set local" callback     */
     H5Z__filter_deflate, /* The actual filter function	*/
+    H5Z_FEAT_FILTER_THREADSAFE |
+        H5Z_FEAT_FILTER_NO_H5_CALLS, /* Feature flags - thread-safe and does not *re*-enter the HDF5 API */
 }};
+
+/*-------------------------------------------------------------------------
+ * Function:    H5Z__deflate_register
+ *
+ * Purpose:     Register the deflate filter with the library.
+ *
+ * Return:      SUCCEED/FAIL
+ *
+ *-------------------------------------------------------------------------
+ */
+herr_t
+H5Z__deflate_register(void)
+{
+    herr_t ret_value = SUCCEED; /* Return value */
+
+    FUNC_ENTER_PACKAGE
+
+    if (H5Z_register(H5Z_DEFLATE) < 0)
+        HGOTO_ERROR(H5E_PLINE, H5E_CANTREGISTER, FAIL, "unable to register deflate filter");
+
+done:
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* end H5Z__deflate_register() */
 
 /*-------------------------------------------------------------------------
  * Function:	H5Z__filter_deflate
@@ -173,9 +198,13 @@ H5Z__filter_deflate(unsigned flags, size_t cd_nelmts, const unsigned cd_values[]
         const Bytef *z_src = (const Bytef *)(*buf);
         Bytef       *z_dst; /*destination buffer		*/
 #if defined(H5_HAVE_ZLIBNG_H)
-        uLongf z_dst_nbytes = (uLongf)zng_compressBound(nbytes);
+        size_t z_dst_buf_size = zng_compressBound(nbytes); /* 5730 */
+        size_t z_dst_nbytes   = z_dst_buf_size;
 #else
-        uLongf z_dst_nbytes = (uLongf)compressBound(nbytes);
+        if ((size_t)(uLong)nbytes != nbytes)
+            HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, 0, "nbytes too large to cast to uLong for zlib compression");
+        uLongf z_dst_buf_size = (uLongf)compressBound((uLong)nbytes);
+        uLongf z_dst_nbytes   = z_dst_buf_size;
 #endif
         uLong z_src_nbytes = (uLong)nbytes;
         int   aggression; /* Compression aggression setting */
@@ -208,9 +237,10 @@ H5Z__filter_deflate(unsigned flags, size_t cd_nelmts, const unsigned cd_values[]
             H5MM_xfree(*buf);
 
             /* Set return values */
-            *buf      = outbuf;
-            outbuf    = NULL;
-            *buf_size = nbytes;
+            *buf   = outbuf;
+            outbuf = NULL;
+            H5_CHECK_OVERFLOW(z_dst_buf_size, uLongf, size_t);
+            *buf_size = (size_t)z_dst_buf_size;
             ret_value = z_dst_nbytes;
         } /* end else */
     }     /* end else */

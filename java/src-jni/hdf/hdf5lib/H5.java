@@ -108,7 +108,7 @@ import org.slf4j.LoggerFactory;
  * </tr>
  * <tr>
  * <td>void * <br />
- * (i.e., pointer to `Any')</td>
+ * (i.e., pointer to `Any`)</td>
  * <td>Special -- see @ref HDFARRAY</td>
  * </tr>
  * </table>
@@ -181,7 +181,7 @@ import org.slf4j.LoggerFactory;
  * static native C order.
  * <p>
  * The upshot is that any Java array of numbers (either primitive or sub-classes of type <b>Number</b>) can be
- * passed as an ``Object'', and the Java API will translate to and from the appropriate packed array of bytes
+ * passed as an `Object`, and the Java API will translate to and from the appropriate packed array of bytes
  * needed by the C library. So the function above would be declared:
  *
  * @code
@@ -193,6 +193,22 @@ import org.slf4j.LoggerFactory;
  *
  * and the parameter <i>data</i> can be any multi-dimensional array of numbers, such as float[][], or
  * int[][][], or Double[][].
+ * <p>
+ * <b>Buffer data model</b>
+ * <p>
+ * Read/write buffers must match the memory datatype. The JNI verifies this at the API boundary and throws
+ * IllegalArgumentException on a mismatch instead of crashing. The expected Java buffer per datatype class is:
+ * <ul>
+ * <li>integer/enum/bitfield, float: a primitive array (byte/short/int/long/float/double[]) or byte[]; it must
+ * be large enough to hold one element of the memory type per selected point.</li>
+ * <li>fixed- or variable-length string, reference: a String[] (byte[] for references) with one slot per
+ * selected point.</li>
+ * <li>compound, variable-length sequence, array, complex: an Object[] of nested java.util.ArrayLists. Each
+ * element is an ArrayList; a compound is an ArrayList of its members in order, a VLEN/array/complex is an
+ * ArrayList of its elements, and scalar leaves are the boxed type (Integer, Double, String, ...) except
+ * reference and opaque leaves, which are a byte[] holding the element's raw bytes. Slots are
+ * not pre-allocated by the caller on read.</li>
+ * </ul>
  * <p>
  * <b>@ref HDF5CONST</b>
  * <p>
@@ -271,9 +287,11 @@ public class H5 implements java.io.Serializable {
      * <li>LIB_VERSION[1]: The minor version of the library.</li>
      * <li>LIB_VERSION[2]: The release number of the library.</li>
      * </ul>
-     * Make sure to update the versions number when a different library is used.
+     * NOTE: This version is automatically synchronized with H5public.h via the auto-generated
+     *       H5Version class. To update the version, edit src/H5public.h (H5_VERS_MAJOR,
+     *       H5_VERS_MINOR, H5_VERS_RELEASE). Do NOT manually edit the version numbers.
      */
-    public final static int LIB_VERSION[] = {2, 0, 1};
+    public final static int LIB_VERSION[] = {H5Version.MAJOR, H5Version.MINOR, H5Version.RELEASE};
 
     /**
      * @ingroup JH5
@@ -1679,7 +1697,8 @@ public class H5 implements java.io.Serializable {
      * @param mem_type_id
      *            IN: Identifier of the attribute datatype (in memory).
      * @param buf
-     *            Buffer of variable-lenght to store data read from the file.
+     *            Object[] (one slot per element) to store the data read; each slot is filled with a nested
+     *            ArrayList structure matching mem_type_id (see "Buffer data model" in the class description).
      *
      * @return a non-negative value if successful
      *
@@ -2261,7 +2280,8 @@ public class H5 implements java.io.Serializable {
      * @param mem_type_id
      *            IN: Identifier of the attribute datatype (in memory).
      * @param buf
-     *            IN: Buffer of variable-lenght with data to be written to the file.
+     *            IN: Object[] (one slot per element) holding the data to write; each slot must be a nested
+     *            ArrayList structure matching mem_type_id (see "Buffer data model" in the class description).
      *
      * @return a non-negative value if successful
      *
@@ -3423,7 +3443,9 @@ public class H5 implements java.io.Serializable {
      * @param xfer_plist_id
      *            Identifier of a transfer property list for this I/O operation.
      * @param buf
-     *            Buffer of variable-lenght to store data read from the file.
+     *            Object[] (one slot per selected point) to store the data read; each slot is filled with a
+     *            nested ArrayList structure matching mem_type_id (see "Buffer data model" in the class
+     *            description). Slots need not be pre-allocated.
      *
      * @return a non-negative value if successful
      *
@@ -4143,7 +4165,9 @@ public class H5 implements java.io.Serializable {
      * @param xfer_plist_id
      *            Identifier of a transfer property list for this I/O operation.
      * @param buf
-     *            Buffer of variable-length with data to be written to the file.
+     *            Object[] (one slot per selected point) holding the data to write; each slot must be a nested
+     *            ArrayList structure matching mem_type_id (see "Buffer data model" in the class description).
+     *            A structural mismatch raises IllegalArgumentException.
      *
      * @return a non-negative value if successful
      *

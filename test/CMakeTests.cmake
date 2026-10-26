@@ -115,7 +115,13 @@ endforeach ()
 # --------------------------------------------------------------------
 set (HDF5_REFERENCE_TEST_FILES
     aggr.h5
+    bad_chunk_ndims.h5
     bad_compound.h5
+    bad_fill_value.h5
+    bad_fletcher32.h5
+    bad_nbit_decompress.h5
+    bad_nbit_params.h5
+    bad_nbit_parms_walk.h5
     bad_offset.h5
     be_data.h5
     be_extlink1.h5
@@ -144,6 +150,7 @@ set (HDF5_REFERENCE_TEST_FILES
     h5fc_ext2_sf.h5
     h5fc_ext3_isf.h5
     h5fc_ext_none.h5
+    heap_corrupt_prfx.h5
     le_data.h5
     le_extlink1.h5
     le_extlink2.h5
@@ -226,7 +233,7 @@ set_tests_properties (H5TEST-testhdf5-clean-objects PROPERTIES FIXTURES_CLEANUP 
 add_test (NAME H5TEST-testhdf5-base COMMAND $<TARGET_FILE:testhdf5> -x file -x select)
 set_tests_properties (H5TEST-testhdf5-base PROPERTIES
     FIXTURES_REQUIRED clear_testhdf5
-    ENVIRONMENT "HDF5_ALARM_SECONDS=3600;srcdir=${HDF5_TEST_BINARY_DIR}/H5TEST;${CROSSCOMPILING_PATH}"
+    ENVIRONMENT "HDF5_ALARM_SECONDS=3600;srcdir=${HDF5_TEST_BINARY_DIR}/H5TEST"
     WORKING_DIRECTORY ${HDF5_TEST_BINARY_DIR}/H5TEST
 )
 if ("H5TEST-testhdf5-base" MATCHES "${HDF5_DISABLE_TESTS_REGEX}")
@@ -235,7 +242,7 @@ endif ()
 add_test (NAME H5TEST-testhdf5-file COMMAND $<TARGET_FILE:testhdf5> -o file)
 set_tests_properties (H5TEST-testhdf5-file PROPERTIES
     FIXTURES_REQUIRED clear_testhdf5
-    ENVIRONMENT "HDF5_ALARM_SECONDS=3600;srcdir=${HDF5_TEST_BINARY_DIR}/H5TEST;${CROSSCOMPILING_PATH}"
+    ENVIRONMENT "HDF5_ALARM_SECONDS=3600;srcdir=${HDF5_TEST_BINARY_DIR}/H5TEST"
     WORKING_DIRECTORY ${HDF5_TEST_BINARY_DIR}/H5TEST
 )
 if ("H5TEST-testhdf5-file" MATCHES "${HDF5_DISABLE_TESTS_REGEX}")
@@ -244,7 +251,7 @@ endif ()
 add_test (NAME H5TEST-testhdf5-select COMMAND $<TARGET_FILE:testhdf5> -o select)
 set_tests_properties (H5TEST-testhdf5-select PROPERTIES
     FIXTURES_REQUIRED clear_testhdf5
-    ENVIRONMENT "HDF5_ALARM_SECONDS=3600;srcdir=${HDF5_TEST_BINARY_DIR}/H5TEST;${CROSSCOMPILING_PATH}"
+    ENVIRONMENT "HDF5_ALARM_SECONDS=3600;srcdir=${HDF5_TEST_BINARY_DIR}/H5TEST"
     WORKING_DIRECTORY ${HDF5_TEST_BINARY_DIR}/H5TEST
 )
 if ("H5TEST-testhdf5-select" MATCHES "${HDF5_DISABLE_TESTS_REGEX}")
@@ -362,7 +369,7 @@ foreach (h5_test ${H5_EXPRESS_TESTS})
       add_test (NAME H5TESTXPR-${h5_test} COMMAND $<TARGET_FILE:${h5_test}>)
       set_tests_properties (H5TESTXPR-${h5_test} PROPERTIES
           FIXTURES_REQUIRED clear_H5TEST
-          ENVIRONMENT "srcdir=${HDF5_TEST_BINARY_DIR}/H5TEST;${CROSSCOMPILING_PATH}"
+          ENVIRONMENT "srcdir=${HDF5_TEST_BINARY_DIR}/H5TEST"
           WORKING_DIRECTORY ${HDF5_TEST_BINARY_DIR}/H5TEST
       )
     else ()
@@ -379,7 +386,7 @@ foreach (h5_test ${H5_EXPRESS_TESTS})
       )
       set_tests_properties (H5TESTXPR-${h5_test} PROPERTIES
           FIXTURES_REQUIRED clear_H5TEST
-          ENVIRONMENT "srcdir=${HDF5_TEST_BINARY_DIR}/H5TEST;${CROSSCOMPILING_PATH}"
+          ENVIRONMENT "srcdir=${HDF5_TEST_BINARY_DIR}/H5TEST"
           WORKING_DIRECTORY ${HDF5_TEST_BINARY_DIR}/H5TEST
       )
     endif ()
@@ -394,7 +401,7 @@ foreach (h5_test ${H5_TESTS})
       add_test (NAME H5TEST-${h5_test} COMMAND $<TARGET_FILE:${h5_test}>)
       set_tests_properties (H5TEST-${h5_test} PROPERTIES
           FIXTURES_REQUIRED clear_H5TEST
-          ENVIRONMENT "srcdir=${HDF5_TEST_BINARY_DIR}/H5TEST;${CROSSCOMPILING_PATH}"
+          ENVIRONMENT "srcdir=${HDF5_TEST_BINARY_DIR}/H5TEST"
           WORKING_DIRECTORY ${HDF5_TEST_BINARY_DIR}/H5TEST
       )
     else ()
@@ -417,7 +424,7 @@ foreach (h5_test ${H5_TESTS})
       endif ()
       set_tests_properties (H5TEST-${h5_test} PROPERTIES
           FIXTURES_REQUIRED clear_H5TEST
-          ENVIRONMENT "srcdir=${HDF5_TEST_BINARY_DIR}/H5TEST;${CROSSCOMPILING_PATH}"
+          ENVIRONMENT "srcdir=${HDF5_TEST_BINARY_DIR}/H5TEST"
           WORKING_DIRECTORY ${HDF5_TEST_BINARY_DIR}/H5TEST
       )
     endif ()
@@ -464,7 +471,7 @@ if (NOT CYGWIN)
   endif ()
   set_tests_properties (H5TEST-cache PROPERTIES
       FIXTURES_REQUIRED clear_cache
-      ENVIRONMENT "srcdir=${HDF5_TEST_BINARY_DIR}/H5TEST;${CROSSCOMPILING_PATH}"
+      ENVIRONMENT "srcdir=${HDF5_TEST_BINARY_DIR}/H5TEST"
       WORKING_DIRECTORY ${HDF5_TEST_BINARY_DIR}/H5TEST
   )
   set_tests_properties (H5TEST-cache PROPERTIES TIMEOUT ${CTEST_VERY_LONG_TIMEOUT})
@@ -473,29 +480,27 @@ if (NOT CYGWIN)
   endif ()
 endif ()
 
-if (TEST_CACHE_IMAGE)
-  #-- Adding test for cache_image
-  add_test (
-      NAME H5TEST-cache_image-clear-objects
-      COMMAND ${CMAKE_COMMAND} -E remove cache_image_test.h5
-      WORKING_DIRECTORY ${HDF5_TEST_BINARY_DIR}/H5TEST
-  )
-  set_tests_properties (H5TEST-cache_image-clear-objects PROPERTIES FIXTURES_SETUP clear_cache_image)
-  add_test (
-      NAME H5TEST-cache_image-clean-objects
-      COMMAND ${CMAKE_COMMAND} -E remove cache_image_test.h5
-      WORKING_DIRECTORY ${HDF5_TEST_BINARY_DIR}/H5TEST
-  )
-  set_tests_properties (H5TEST-cache_image-clean-objects PROPERTIES FIXTURES_CLEANUP clear_cache_image)
-  add_test (NAME H5TEST-cache_image COMMAND $<TARGET_FILE:cache_image>)
-  set_tests_properties (H5TEST-cache_image PROPERTIES
-      FIXTURES_REQUIRED clear_cache_image
-      ENVIRONMENT "srcdir=${HDF5_TEST_BINARY_DIR}/H5TEST;${CROSSCOMPILING_PATH}"
-      WORKING_DIRECTORY ${HDF5_TEST_BINARY_DIR}/H5TEST
-  )
-  if ("H5TEST-cache_image" MATCHES "${HDF5_DISABLE_TESTS_REGEX}")
-    set_tests_properties (H5TEST-cache_image PROPERTIES DISABLED true)
-  endif ()
+#-- Adding test for cache_image
+add_test (
+    NAME H5TEST-cache_image-clear-objects
+    COMMAND ${CMAKE_COMMAND} -E remove cache_image_test.h5
+    WORKING_DIRECTORY ${HDF5_TEST_BINARY_DIR}/H5TEST
+)
+set_tests_properties (H5TEST-cache_image-clear-objects PROPERTIES FIXTURES_SETUP clear_cache_image)
+add_test (
+    NAME H5TEST-cache_image-clean-objects
+    COMMAND ${CMAKE_COMMAND} -E remove cache_image_test.h5
+    WORKING_DIRECTORY ${HDF5_TEST_BINARY_DIR}/H5TEST
+)
+set_tests_properties (H5TEST-cache_image-clean-objects PROPERTIES FIXTURES_CLEANUP clear_cache_image)
+add_test (NAME H5TEST-cache_image COMMAND $<TARGET_FILE:cache_image>)
+set_tests_properties (H5TEST-cache_image PROPERTIES
+    FIXTURES_REQUIRED clear_cache_image
+    ENVIRONMENT "srcdir=${HDF5_TEST_BINARY_DIR}/H5TEST"
+    WORKING_DIRECTORY ${HDF5_TEST_BINARY_DIR}/H5TEST
+)
+if ("H5TEST-cache_image" MATCHES "${HDF5_DISABLE_TESTS_REGEX}")
+  set_tests_properties (H5TEST-cache_image PROPERTIES DISABLED true)
 endif ()
 
 #-- Adding test for external_env
@@ -539,7 +544,7 @@ else ()
 endif ()
 set_tests_properties (H5TEST-external_env PROPERTIES
     FIXTURES_REQUIRED clear_external_env
-    ENVIRONMENT "srcdir=${HDF5_TEST_BINARY_DIR}/H5TEST;${CROSSCOMPILING_PATH}"
+    ENVIRONMENT "srcdir=${HDF5_TEST_BINARY_DIR}/H5TEST"
     WORKING_DIRECTORY ${HDF5_TEST_BINARY_DIR}/H5TEST
 )
 if ("H5TEST-external_env" MATCHES "${HDF5_DISABLE_TESTS_REGEX}")
@@ -573,7 +578,7 @@ else ()
 endif ()
 set_tests_properties (H5TEST-vds_env PROPERTIES
     FIXTURES_REQUIRED clear_vds_env
-    ENVIRONMENT "srcdir=${HDF5_TEST_BINARY_DIR}/H5TEST;${CROSSCOMPILING_PATH}"
+    ENVIRONMENT "srcdir=${HDF5_TEST_BINARY_DIR}/H5TEST"
     WORKING_DIRECTORY ${HDF5_TEST_BINARY_DIR}/H5TEST
 )
 if ("H5TEST-vds_env" MATCHES "${HDF5_DISABLE_TESTS_REGEX}")
@@ -616,7 +621,7 @@ else ()
 endif ()
 set_tests_properties (H5TEST-flush1 PROPERTIES
     FIXTURES_REQUIRED clear_flush
-    ENVIRONMENT "srcdir=${HDF5_TEST_BINARY_DIR}/H5TEST;${CROSSCOMPILING_PATH}"
+    ENVIRONMENT "srcdir=${HDF5_TEST_BINARY_DIR}/H5TEST"
     WORKING_DIRECTORY ${HDF5_TEST_BINARY_DIR}/H5TEST
 )
 if ("H5TEST-flush1" MATCHES "${HDF5_DISABLE_TESTS_REGEX}")
@@ -638,7 +643,6 @@ endif ()
 set_tests_properties (H5TEST-flush2 PROPERTIES
     FIXTURES_REQUIRED clear_flush
     DEPENDS H5TEST-flush1
-    ENVIRONMENT "${CROSSCOMPILING_PATH}"
 )
 if ("H5TEST-flush2" MATCHES "${HDF5_DISABLE_TESTS_REGEX}")
   set_tests_properties (H5TEST-flush2 PROPERTIES DISABLED true)
@@ -648,7 +652,6 @@ endif ()
 add_test (NAME H5TEST-tcheck_version-major COMMAND $<TARGET_FILE:tcheck_version> "-tM")
 set_tests_properties (H5TEST-tcheck_version-major PROPERTIES
     WORKING_DIRECTORY ${HDF5_TEST_BINARY_DIR}/H5TEST
-    ENVIRONMENT "${CROSSCOMPILING_PATH}"
     WILL_FAIL "true"
 )
 if ("H5TEST-tcheck_version-major" MATCHES "${HDF5_DISABLE_TESTS_REGEX}")
@@ -659,7 +662,6 @@ endif ()
 add_test (NAME H5TEST-tcheck_version-minor COMMAND $<TARGET_FILE:tcheck_version> "-tm")
 set_tests_properties (H5TEST-tcheck_version-minor PROPERTIES
     WORKING_DIRECTORY ${HDF5_TEST_BINARY_DIR}/H5TEST
-    ENVIRONMENT "${CROSSCOMPILING_PATH}"
     WILL_FAIL "true"
 )
 if ("H5TEST-tcheck_version-minor" MATCHES "${HDF5_DISABLE_TESTS_REGEX}")
@@ -669,8 +671,7 @@ endif ()
 add_test (NAME H5TEST-tcheck_version-release COMMAND $<TARGET_FILE:tcheck_version> "-tr")
 set_tests_properties (H5TEST-tcheck_version-release PROPERTIES
     WORKING_DIRECTORY ${HDF5_TEST_BINARY_DIR}/H5TEST
-    ENVIRONMENT "${CROSSCOMPILING_PATH}"
-) 
+)
 if ("H5TEST-tcheck_version-release" MATCHES "${HDF5_DISABLE_TESTS_REGEX}")
   set_tests_properties (H5TEST-tcheck_version-release PROPERTIES DISABLED true)
 endif ()
@@ -711,8 +712,9 @@ if (HDF5_ENABLE_ROS3_VFD_DOCKER_PROXY)
           -D "TEST_PORT=${h5test_s3tests_port}"
           -D "TEST_ARGS:STRING=s3proxy-local-fs"
           -D "TEST_BUCKET:STRING=hdf5ros3"
-          -D "TEST_FILES:STRING=t8.shakespeare.txt;Poe_Raven.txt;charsets.h5"
-          -D "TEST_ACLS:STRING=skip;anon;anon"
+          -D "TEST_FILES:STRING=t8.shakespeare.txt;Poe_Raven.txt;charsets.h5;charsets.h5"
+          -D "TEST_ACLS:STRING=skip;anon;anon;skip"
+          -D "TEST_KEYS:STRING=t8.shakespeare.txt;Poe_Raven.txt;charsets.h5;src=h5test/fmt=hive+style@cloud/charsets.h5"
           -D "TEST_EXPECT=0"
           -D "TEST_ENV_VAR:STRING=AWS_SHARED_CREDENTIALS_FILE"
           -D "TEST_ENV_VALUE:STRING=${CMAKE_BINARY_DIR}/credentials"
@@ -750,7 +752,7 @@ if (HDF5_ENABLE_ROS3_VFD_DOCKER_PROXY)
     endif ()
     set_tests_properties (H5TEST_S3TESTS-${h5_test} PROPERTIES
         FIXTURES_REQUIRED s3_proxy
-        ENVIRONMENT "${h5test_s3tests_env};${CROSSCOMPILING_PATH}"
+        ENVIRONMENT "${h5test_s3tests_env}"
         WORKING_DIRECTORY ${HDF5_TEST_BINARY_DIR}/H5TEST
     )
     if ("H5TEST_S3TESTS-${h5_test}" MATCHES "${HDF5_DISABLE_TESTS_REGEX}")
@@ -830,7 +832,7 @@ set_tests_properties (H5TEST-del_many_dense_attrs-clean-objects PROPERTIES FIXTU
 add_test (NAME H5TEST-del_many_dense_attrs COMMAND $<TARGET_FILE:del_many_dense_attrs>)
 set_tests_properties (H5TEST-del_many_dense_attrs PROPERTIES
     FIXTURES_REQUIRED clear_del_many_dense_attrs
-    ENVIRONMENT "srcdir=${HDF5_TEST_BINARY_DIR}/H5TEST;${CROSSCOMPILING_PATH}"
+    ENVIRONMENT "srcdir=${HDF5_TEST_BINARY_DIR}/H5TEST"
     WORKING_DIRECTORY ${HDF5_TEST_BINARY_DIR}/H5TEST
 )
 if ("H5TEST-del_many_dense_attrs" MATCHES "${HDF5_DISABLE_TESTS_REGEX}")
@@ -851,7 +853,7 @@ if (HDF5_ENABLE_DEPRECATED_SYMBOLS AND NOT MINGW)
       -P "${HDF_RESOURCES_DIR}/runTest.cmake"
   )
   set_tests_properties (H5TEST-err_compat PROPERTIES
-      ENVIRONMENT "srcdir=${HDF5_TEST_BINARY_DIR}/H5TEST;${CROSSCOMPILING_PATH}"
+      ENVIRONMENT "srcdir=${HDF5_TEST_BINARY_DIR}/H5TEST"
       WORKING_DIRECTORY ${HDF5_TEST_BINARY_DIR}/H5TEST
   )
 else ()
@@ -867,7 +869,7 @@ else ()
       -P "${HDF_RESOURCES_DIR}/runTest.cmake"
   )
   set_tests_properties (H5TEST-err_compat PROPERTIES
-      ENVIRONMENT "srcdir=${HDF5_TEST_BINARY_DIR}/H5TEST;${CROSSCOMPILING_PATH}"
+      ENVIRONMENT "srcdir=${HDF5_TEST_BINARY_DIR}/H5TEST"
       WORKING_DIRECTORY ${HDF5_TEST_BINARY_DIR}/H5TEST
   )
 endif ()
@@ -889,7 +891,7 @@ if (HDF5_DEFAULT_API_VERSION MATCHES "v16" OR MINGW)
       -P "${HDF_RESOURCES_DIR}/runTest.cmake"
   )
   set_tests_properties (H5TEST-error_test PROPERTIES
-      ENVIRONMENT "srcdir=${HDF5_TEST_BINARY_DIR}/H5TEST;HDF5_PLUGIN_PRELOAD=::;${CROSSCOMPILING_PATH}"
+      ENVIRONMENT "srcdir=${HDF5_TEST_BINARY_DIR}/H5TEST;HDF5_PLUGIN_PRELOAD=::"
       WORKING_DIRECTORY ${HDF5_TEST_BINARY_DIR}/H5TEST
   )
 else ()
@@ -905,7 +907,7 @@ else ()
       -P "${HDF_RESOURCES_DIR}/runTest.cmake"
   )
   set_tests_properties (H5TEST-error_test PROPERTIES
-      ENVIRONMENT "srcdir=${HDF5_TEST_BINARY_DIR}/H5TEST;HDF5_PLUGIN_PRELOAD=::;${CROSSCOMPILING_PATH}"
+      ENVIRONMENT "srcdir=${HDF5_TEST_BINARY_DIR}/H5TEST;HDF5_PLUGIN_PRELOAD=::"
       WORKING_DIRECTORY ${HDF5_TEST_BINARY_DIR}/H5TEST
   )
   add_test (
@@ -920,6 +922,20 @@ endif ()
 if ("H5TEST-error_test" MATCHES "${HDF5_DISABLE_TESTS_REGEX}")
   set_tests_properties (H5TEST-error_test PROPERTIES DISABLED true)
 endif ()
+
+#-- Adding tests for API version defaulting
+#   API_VERSION_TEST_NUMBERS is defined in CMakeLists.txt and already in scope
+foreach (api_num IN LISTS API_VERSION_TEST_NUMBERS)
+  add_test (NAME H5TEST-tapi_version_default_v${api_num}
+      COMMAND $<TARGET_FILE:tapi_version_default_v${api_num}>
+  )
+  set_tests_properties (H5TEST-tapi_version_default_v${api_num} PROPERTIES
+      WORKING_DIRECTORY ${HDF5_TEST_BINARY_DIR}/H5TEST
+  )
+  if ("H5TEST-tapi_version_default_v${api_num}" MATCHES "${HDF5_DISABLE_TESTS_REGEX}")
+    set_tests_properties (H5TEST-tapi_version_default_v${api_num} PROPERTIES DISABLED true)
+  endif ()
+endforeach ()
 
 #-- Adding test for links_env
 add_test (NAME H5TEST-links_env-clear-objects
@@ -957,7 +973,7 @@ else ()
 endif ()
 set_tests_properties (H5TEST-links_env PROPERTIES
     FIXTURES_REQUIRED clear_links_env
-    ENVIRONMENT "srcdir=${HDF5_TEST_BINARY_DIR}/H5TEST;HDF5_EXT_PREFIX=.:tmp_links_env;${CROSSCOMPILING_PATH}"
+    ENVIRONMENT "srcdir=${HDF5_TEST_BINARY_DIR}/H5TEST;HDF5_EXT_PREFIX=.:tmp_links_env"
     WORKING_DIRECTORY ${HDF5_TEST_BINARY_DIR}/H5TEST
 )
 if ("H5TEST-links_env" MATCHES "${HDF5_DISABLE_TESTS_REGEX}")
@@ -994,21 +1010,41 @@ if (BUILD_SHARED_LIBS)
   endif ()
 
   add_test (NAME H5PLUGIN-filter_plugin COMMAND $<TARGET_FILE:filter_plugin>)
+  set (H5PLUGIN_FILTER_ENV "HDF5_PLUGIN_PATH=${CMAKE_BINARY_DIR}/filter_plugin_dir1${CMAKE_SEP}${CMAKE_BINARY_DIR}/filter_plugin_dir2${CMAKE_SEP};HDF5_VOL_CONNECTOR=;srcdir=${HDF5_TEST_BINARY_DIR}")
+  if (HDF5_REQUIRE_SIGNED_PLUGINS)
+    list (APPEND H5PLUGIN_FILTER_ENV "HDF5_PLUGIN_KEYSTORE=${CMAKE_BINARY_DIR}/test_keystore")
+  endif ()
   set_tests_properties (H5PLUGIN-filter_plugin PROPERTIES
-      ENVIRONMENT "HDF5_PLUGIN_PATH=${CMAKE_BINARY_DIR}/filter_plugin_dir1${CMAKE_SEP}${CMAKE_BINARY_DIR}/filter_plugin_dir2${CMAKE_SEP};HDF5_VOL_CONNECTOR=;srcdir=${HDF5_TEST_BINARY_DIR};${CROSSCOMPILING_PATH}"
+      ENVIRONMENT "${H5PLUGIN_FILTER_ENV}"
       WORKING_DIRECTORY ${HDF5_TEST_BINARY_DIR}
   )
   if ("H5PLUGIN-filter_plugin" MATCHES "${HDF5_DISABLE_TESTS_REGEX}")
     set_tests_properties (H5PLUGIN-filter_plugin PROPERTIES DISABLED true)
   endif ()
+
+  # Add plugin signature verification test (only when signature verification is enabled)
+  if (HDF5_REQUIRE_SIGNED_PLUGINS)
+    add_test (NAME H5PLUGIN-signature-verification COMMAND $<TARGET_FILE:test_plugin_signature>)
+    set_tests_properties (H5PLUGIN-signature-verification PROPERTIES
+        ENVIRONMENT "srcdir=${HDF5_TEST_BINARY_DIR};HDF5_TEST_PRIVATE_KEY=${CMAKE_BINARY_DIR}/private.pem;HDF5_PLUGIN_KEYSTORE=${CMAKE_BINARY_DIR}/test_keystore"
+        ENVIRONMENT_MODIFICATION "PATH=path_list_prepend:${CMAKE_TEST_OUTPUT_DIRECTORY}"
+        WORKING_DIRECTORY ${HDF5_TEST_BINARY_DIR}
+        LABELS "H5PLUGIN"
+    )
+    if ("H5PLUGIN-signature-verification" MATCHES "${HDF5_DISABLE_TESTS_REGEX}")
+      set_tests_properties (H5PLUGIN-signature-verification PROPERTIES DISABLED true)
+    endif ()
+  endif ()
 endif ()
 
 option (HDF5_TEST_SHELL_SCRIPTS "Enable shell script tests" ON)
+mark_as_advanced (HDF5_TEST_SHELL_SCRIPTS)
 if (HDF5_TEST_SHELL_SCRIPTS)
   include (ShellTests.cmake)
 endif()
 
 option (ENABLE_EXTENDED_TESTS "Enable extended tests" OFF)
+mark_as_advanced (ENABLE_EXTENDED_TESTS)
 if (ENABLE_EXTENDED_TESTS)
 ##############################################################################
 ###    S W M R  T E S T S
@@ -1052,7 +1088,7 @@ if (ENABLE_EXTENDED_TESTS)
     )
     set_tests_properties (H5TEST-testflushrefresh PROPERTIES
         FIXTURES_REQUIRED clear_testflushrefresh
-        ENVIRONMENT "srcdir=${HDF5_TEST_BINARY_DIR}/H5TEST/flushrefresh_test;${CROSSCOMPILING_PATH}"
+        ENVIRONMENT "srcdir=${HDF5_TEST_BINARY_DIR}/H5TEST/flushrefresh_test"
         WORKING_DIRECTORY ${HDF5_TEST_BINARY_DIR}/H5TEST/flushrefresh_test
     )
     if ("H5TEST-testflushrefresh" MATCHES "${HDF5_DISABLE_TESTS_REGEX}")
@@ -1092,8 +1128,12 @@ if (BUILD_SHARED_LIBS)
   endif ()
 
   add_test (NAME H5PLUGIN-vol_plugin COMMAND $<TARGET_FILE:vol_plugin>)
+  set (H5PLUGIN_VOL_ENV "HDF5_PLUGIN_PATH=${CMAKE_BINARY_DIR}/null_vol_plugin_dir;srcdir=${HDF5_TEST_BINARY_DIR};HDF5_VOL_CONNECTOR=")
+  if (HDF5_REQUIRE_SIGNED_PLUGINS)
+    list (APPEND H5PLUGIN_VOL_ENV "HDF5_PLUGIN_KEYSTORE=${CMAKE_BINARY_DIR}/test_keystore")
+  endif ()
   set_tests_properties (H5PLUGIN-vol_plugin PROPERTIES
-      ENVIRONMENT "HDF5_PLUGIN_PATH=${CMAKE_BINARY_DIR}/null_vol_plugin_dir;srcdir=${HDF5_TEST_BINARY_DIR};HDF5_VOL_CONNECTOR=;${CROSSCOMPILING_PATH}"
+      ENVIRONMENT "${H5PLUGIN_VOL_ENV}"
       WORKING_DIRECTORY ${HDF5_TEST_BINARY_DIR}
   )
   if ("H5PLUGIN-vol_plugin" MATCHES "${HDF5_DISABLE_TESTS_REGEX}")
@@ -1132,6 +1172,9 @@ endmacro ()
 
 # generator executables
 set (H5_GENERATORS
+    gen_bad_chunk
+    gen_bad_fill
+    gen_bad_filters
     gen_bad_offset
     gen_bad_ohdr
     gen_bogus

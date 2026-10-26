@@ -282,7 +282,7 @@ endif ()
 # MinGW and Cygwin
 if (MINGW OR CYGWIN)
   set (CMAKE_REQUIRED_DEFINITIONS
-      "${CURRENT_TEST_DEFINITIONS} -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE"
+      "${CMAKE_REQUIRED_DEFINITIONS} -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE"
   )
 endif ()
 
@@ -642,6 +642,12 @@ if (HDF5_ENABLE_ROS3_VFD)
       message (FATAL_ERROR "Found aws-c-s3 library but CMake target for library didn't exist")
     endif ()
 
+    if (WINDOWS)
+      # RtlDllShutdownInProgress is used to avoid potential Windows loader lock
+      # deadlocks during library shutdown
+      CHECK_LIBRARY_EXISTS_CONCAT ("ntdll" RtlDllShutdownInProgress ${HDF_PREFIX}_HAVE_RTLDLLSHUTDOWNINPROGRESS)
+    endif ()
+
     list (APPEND LINK_LIBS AWS::aws-c-s3)
 
     set (${HDF_PREFIX}_HAVE_ROS3_VFD 1)
@@ -735,7 +741,7 @@ if (HDF5_BUILD_FORTRAN)
   # Get the max decimal precision in C, checking both long double and
   # __float128 (if available)
   #-----------------------------------------------------------------------------
-  if (NOT CMAKE_CROSSCOMPILING)
+  if (NOT CMAKE_CROSSCOMPILING OR (CMAKE_CROSSCOMPILING AND CMAKE_CROSSCOMPILING_EMULATOR))
     #-----------------------------------------------------------------------------
     # The provided CMake C macros don't provide a general compile/run function
     # so this one is used.
@@ -745,18 +751,12 @@ if (HDF5_BUILD_FORTRAN)
         message (VERBOSE "Detecting C ${FUNCTION_NAME}")
         file (WRITE
             ${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/testCCompiler1.c
-            ${SOURCE_CODE}
+          "${SOURCE_CODE}"
         )
-        if (CMAKE_VERSION VERSION_LESS 3.25)
-          set (_RUN_OUTPUT_VARIABLE "RUN_OUTPUT_VARIABLE")
-        else ()
-          set (_RUN_OUTPUT_VARIABLE  "RUN_OUTPUT_STDOUT_VARIABLE")
-        endif ()
-        TRY_RUN (RUN_RESULT_VAR COMPILE_RESULT_VAR
-            ${CMAKE_BINARY_DIR}
-            ${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/testCCompiler1.c
+        try_run (RUN_RESULT_VAR COMPILE_RESULT_VAR
+            SOURCES ${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/testCCompiler1.c
             COMPILE_OUTPUT_VARIABLE COMPILEOUT
-            ${_RUN_OUTPUT_VARIABLE} OUTPUT_VAR
+            RUN_OUTPUT_STDOUT_VARIABLE OUTPUT_VAR
         )
 
         set (${RETURN_OUTPUT_VAR} ${OUTPUT_VAR})
@@ -787,29 +787,30 @@ if (HDF5_BUILD_FORTRAN)
             message (FATAL_ERROR "Compilation of C ${FUNCTION_NAME} - Failed")
         endif ()
     endmacro ()
-    set (PROG_SRC
-        "
-#include <float.h>\n\
-#include <stdio.h>\n\
-#if ${C_HAVE_FLOAT128}\n\
-#  if ${C_INCLUDE_QUADMATH_H}\n\
-#    include <quadmath.h>\n\
-#  endif\n\
-#  ifdef FLT128_DIG\n\
-#    define C_FLT128_DIG FLT128_DIG\n\
-#  else\n\
-#    define C_FLT128_DIG 0\n\
-#  endif\n\
-#else\n\
-#  define C_FLT128_DIG 0\n\
-#endif\n\
-#define C_LDBL_DIG DECIMAL_DIG\n\
-\n\
-int main(void) {\nprintf(\"\\%d\\\;\\%d\\\;\", C_LDBL_DIG, C_FLT128_DIG)\\\;\n\nreturn 0\\\;\n}\n
-        "
-    )
+    string (CONFIGURE [=[
+  #include <float.h>
+  #include <stdio.h>
+  #if @C_HAVE_FLOAT128@
+  #  if @C_INCLUDE_QUADMATH_H@
+  #    include <quadmath.h>
+  #  endif
+  #  ifdef FLT128_DIG
+  #    define C_FLT128_DIG FLT128_DIG
+  #  else
+  #    define C_FLT128_DIG 0
+  #  endif
+  #else
+  #  define C_FLT128_DIG 0
+  #endif
+  #define C_LDBL_DIG DECIMAL_DIG
 
-    C_RUN ("maximum decimal precision for C" ${PROG_SRC} PROG_RES PROG_OUTPUT4)
+  int main(void) {
+    printf("%d;%d;", C_LDBL_DIG, C_FLT128_DIG);
+    return 0;
+  }
+  ]=] PROG_SRC @ONLY)
+
+    C_RUN ("maximum decimal precision for C" "${PROG_SRC}" PROG_RES PROG_OUTPUT4)
     message (STATUS "Testing maximum decimal precision for C - ${PROG_OUTPUT4}")
 
     # The output from the above program will be:
@@ -844,7 +845,7 @@ endif()
 #-----------------------------------------------------------------------------
 macro (H5ConversionTests TEST def msg)
   if (NOT DEFINED ${TEST})
-    if (NOT CMAKE_CROSSCOMPILING)
+    if (NOT CMAKE_CROSSCOMPILING OR (CMAKE_CROSSCOMPILING AND CMAKE_CROSSCOMPILING_EMULATOR))
       # Build and run the test code if not cross-compiling
       TRY_RUN (${TEST}_RUN   ${TEST}_COMPILE
           ${CMAKE_BINARY_DIR}
@@ -1027,8 +1028,10 @@ H5ConversionTests (${HDF_PREFIX}_DISABLE_SOME_LDOUBLE_CONV FALSE "Checking IF th
 # Option to enable or disable all non-standard features. Specific features can
 # be enabled or disabled with their respective options below
 option (HDF5_ENABLE_NONSTANDARD_FEATURES "Enable support for non-standard programming language features" ON)
+mark_as_advanced (HDF5_ENABLE_NONSTANDARD_FEATURES)
 # Options for enabling or disabling individual features
 option (HDF5_ENABLE_NONSTANDARD_FEATURE_FLOAT16 "Enable support for _Float16 C datatype" ON)
+mark_as_advanced (HDF5_ENABLE_NONSTANDARD_FEATURE_FLOAT16)
 if (NOT HDF5_ENABLE_NONSTANDARD_FEATURES)
   set (HDF5_ENABLE_NONSTANDARD_FEATURE_FLOAT16 OFF CACHE BOOL "Enable support for _Float16 C datatype" FORCE)
 endif ()

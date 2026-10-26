@@ -396,14 +396,15 @@ xml_dump_all_cb(hid_t group, const char *name, const H5L_info2_t *linfo, void H5
                         char *t_targbuf  = xml_escape_the_name(targbuf);
                         char *t_obj_path = xml_escape_the_name(obj_path);
                         char *t_link_path;
-                        int   res;
+                        /* +2 accounts for '/' separator and NUL terminator */
+                        size_t t_link_path_len = strlen(prefix) + linfo->u.val_size + 2;
+                        int    res;
 
-                        t_link_path = (char *)malloc(strlen(prefix) + linfo->u.val_size + 1);
+                        t_link_path = (char *)malloc(t_link_path_len);
                         if (targbuf[0] == '/')
-                            strcpy(t_link_path, targbuf);
+                            snprintf(t_link_path, t_link_path_len, "%s", targbuf);
                         else {
-                            strcpy(t_link_path, prefix);
-                            strcat(strcat(t_link_path, "/"), targbuf);
+                            snprintf(t_link_path, t_link_path_len, "%s/%s", prefix, targbuf);
                         } /* end else */
 
                         /* Create OBJ-XIDs for the parent and object */
@@ -3534,8 +3535,9 @@ xml_dump_fill_value(hid_t dcpl, hid_t type)
     hid_t             n_type = H5I_INVALID_HID;
     void             *buf;
     char             *name;
-    h5tools_str_t     buffer; /* string into which to render   */
-    h5tools_context_t ctx;    /* print context  */
+    herr_t            fill_ret = FAIL; /* status of retrieving the fill value */
+    h5tools_str_t     buffer;          /* string into which to render   */
+    h5tools_context_t ctx;             /* print context  */
     h5tool_format_t  *outputformat = &xml_dataformat;
     h5tool_format_t   string_dataformat;
     hsize_t           curr_pos = 0; /* total data element position   */
@@ -3593,11 +3595,33 @@ xml_dump_fill_value(hid_t dcpl, hid_t type)
         n_type = type;
 
     space = H5Tget_size(n_type);
-    buf   = malloc((size_t)space);
+    /* Zero-initialize so a partially-filled buffer never contains
+     * uninitialized memory for the rendering code below. */
+    buf = calloc((size_t)space, 1);
 
-    H5Pget_fill_value(dcpl, n_type, buf);
+    /* Retrieve the fill value.  This can fail on a corrupted or crafted file
+     * whose fill value has no datatype. Any errors are suppressed and handled
+     * later. */
+    if (buf != NULL) {
+        H5E_BEGIN_TRY
+        {
+            fill_ret = H5Pget_fill_value(dcpl, n_type, buf);
+        }
+        H5E_END_TRY
+    }
 
-    if (H5Tget_class(n_type) == H5T_REFERENCE) {
+    if (buf == NULL || fill_ret < 0) {
+        /* No usable fill value: emit an empty element rather than
+         * dereferencing an unallocated or unretrievable buffer. */
+        ctx.need_prefix = true;
+
+        /* Render the element */
+        h5tools_str_reset(&buffer);
+        h5tools_str_append(&buffer, "<%sNoData />", xmlnsprefix);
+        h5tools_render_element(rawoutstream, outputformat, &ctx, &buffer, &curr_pos,
+                               (size_t)outputformat->line_ncols, (hsize_t)0, (hsize_t)0);
+    }
+    else if (H5Tget_class(n_type) == H5T_REFERENCE) {
         const char *path = lookup_ref_path(*(H5R_ref_t *)buf);
 
         ctx.need_prefix = true;

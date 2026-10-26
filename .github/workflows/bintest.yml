@@ -36,7 +36,7 @@ jobs:
         run: choco install ninja
 
       - name: Set up JDK ${{ inputs.java_version }}
-        uses: actions/setup-java@f2beeb24e141e01a676f977032f5a29d81c9e27e # v5
+        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v5
         with:
           java-version: |
             ${{
@@ -51,9 +51,9 @@ jobs:
 
       # Get files created by cmake-ctest script
       - name: Get published binary (Windows)
-        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6.0.0
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
-              name: zip-vs2022_cl-${{ inputs.build_mode }}-${{ inputs.save_binary }}-binary
+              name: zip-vs2026_cl-${{ inputs.build_mode }}-${{ inputs.save_binary }}-binary
               path: ${{ github.workspace }}/hdf5
 
       - name: Uncompress hdf5 binary (Win)
@@ -116,10 +116,10 @@ jobs:
       - name: Install Dependencies (Linux)
         run: |
           sudo apt-get update
-          sudo apt-get install ninja-build doxygen graphviz
+          sudo apt-get install ninja-build graphviz
 
       - name: Set up JDK ${{ inputs.java_version }}
-        uses: actions/setup-java@f2beeb24e141e01a676f977032f5a29d81c9e27e # v5
+        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v5
         with:
           java-version: |
             ${{
@@ -130,7 +130,7 @@ jobs:
           distribution: ${{ inputs.save_binary == 'ffm' && 'oracle' || 'temurin' }}
 
       - name: Get published binary (Linux)
-        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6.0.0
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
               name: tgz-ubuntu-2404_gcc-${{ inputs.build_mode }}-${{ inputs.save_binary }}-binary
               path: ${{ github.workspace }}
@@ -172,11 +172,8 @@ jobs:
     name: "MacOS Clang Binary Test"
     runs-on: macos-latest
     steps:
-      - name: Install Dependencies (MacOS_latest)
-        run: brew install ninja doxygen
-
       - name: Set up JDK ${{ inputs.java_version }}
-        uses: actions/setup-java@f2beeb24e141e01a676f977032f5a29d81c9e27e # v5
+        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v5
         with:
           java-version: |
             ${{
@@ -187,9 +184,9 @@ jobs:
           distribution: ${{ inputs.save_binary == 'ffm' && 'oracle' || 'temurin' }}
 
       - name: Get published binary (MacOS_latest)
-        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6.0.0
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
-          name: tgz-macos14_clang-${{ inputs.build_mode }}-${{ inputs.save_binary }}-binary
+          name: tgz-macos15_clang-${{ inputs.build_mode }}-${{ inputs.save_binary }}-binary
           path: ${{ github.workspace }}
 
       - name: Uncompress hdf5 binary (MacOS_latest)
@@ -216,7 +213,7 @@ jobs:
 
       # symlinks the compiler executables to a common location 
       - name: Setup GNU Fortran
-        uses: fortran-lang/setup-fortran@47809fdb6e637da656ce9ada436527b240c1287f # v1
+        uses: fortran-lang/setup-fortran@be037f0a45b1160f139d4ccd0b96f9e9bfd6a682 # v1
         id: setup-fortran
         with:
           compiler: gcc
@@ -241,10 +238,10 @@ jobs:
       - name: Install Dependencies (Linux)
         run: |
           sudo apt-get update
-          sudo apt-get install ninja-build doxygen graphviz
+          sudo apt-get install ninja-build graphviz
 
       - name: Set up JDK ${{ inputs.java_version }}
-        uses: actions/setup-java@f2beeb24e141e01a676f977032f5a29d81c9e27e # v5
+        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v5
         with:
           java-version: |
             ${{
@@ -255,7 +252,7 @@ jobs:
           distribution: ${{ inputs.save_binary == 'ffm' && 'oracle' || 'temurin' }}
 
       - name: Get published binary (Linux)
-        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6.0.0
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
               name: tgz-ubuntu-2404_gcc-${{ inputs.build_mode }}-${{ inputs.save_binary }}-binary
               path: ${{ github.workspace }}

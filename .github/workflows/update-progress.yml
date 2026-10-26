@@ -13,15 +13,17 @@ jobs:
     if: github.repository_owner == 'HDFGROUP'
     steps:
     - name: Checkout repository
-      uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
-        
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+        persist-credentials: false
+ 
     - name: Set up Python
-      uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # v6
+      uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
       with:
         python-version: '3.11'  # Use specific version for consistency
         
     - name: Cache pip dependencies
-      uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v4
       with:
         path: ~/.cache/pip
         key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
@@ -115,12 +117,40 @@ jobs:
           exit 1
         fi
         
+        # Extract critical, high, medium, and low priority counts
+        BLOCKER_DONE=$(grep "^blocker_done=" progress_output.txt | cut -d'=' -f2 | head -1)
+        BLOCKER_TOTAL=$(grep "^blocker_total=" progress_output.txt | cut -d'=' -f2 | head -1)
+        MUSTDO_DONE=$(grep "^mustdo_done=" progress_output.txt | cut -d'=' -f2 | head -1)
+        MUSTDO_TOTAL=$(grep "^mustdo_total=" progress_output.txt | cut -d'=' -f2 | head -1)
+        MEDIUM_DONE=$(grep "^medium_done=" progress_output.txt | cut -d'=' -f2 | head -1)
+        MEDIUM_TOTAL=$(grep "^medium_total=" progress_output.txt | cut -d'=' -f2 | head -1)
+        LOW_DONE=$(grep "^low_done=" progress_output.txt | cut -d'=' -f2 | head -1)
+        LOW_TOTAL=$(grep "^low_total=" progress_output.txt | cut -d'=' -f2 | head -1)
+        VERSION=$(grep "^version=" progress_output.txt | cut -d'=' -f2 | head -1)
+        LATEST_RELEASE_TAG=$(grep "^latest_release_tag=" progress_output.txt | cut -d'=' -f2 | head -1)
+        LATEST_RELEASE_DATE=$(grep "^latest_release_date=" progress_output.txt | cut -d'=' -f2 | head -1)
+        MILESTONE_DUE_DATE=$(grep "^milestone_due_date=" progress_output.txt | cut -d'=' -f2 | head -1)
+
         # Set outputs for use in subsequent steps
         echo "percentage=$PERCENTAGE" >> $GITHUB_OUTPUT
         echo "done=$DONE" >> $GITHUB_OUTPUT
         echo "total=$TOTAL" >> $GITHUB_OUTPUT
-        
+        echo "blocker_done=$BLOCKER_DONE" >> $GITHUB_OUTPUT
+        echo "blocker_total=$BLOCKER_TOTAL" >> $GITHUB_OUTPUT
+        echo "mustdo_done=$MUSTDO_DONE" >> $GITHUB_OUTPUT
+        echo "mustdo_total=$MUSTDO_TOTAL" >> $GITHUB_OUTPUT
+        echo "medium_done=$MEDIUM_DONE" >> $GITHUB_OUTPUT
+        echo "medium_total=$MEDIUM_TOTAL" >> $GITHUB_OUTPUT
+        echo "low_done=$LOW_DONE" >> $GITHUB_OUTPUT
+        echo "low_total=$LOW_TOTAL" >> $GITHUB_OUTPUT
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+        echo "latest_release_tag=$LATEST_RELEASE_TAG" >> $GITHUB_OUTPUT
+        echo "latest_release_date=$LATEST_RELEASE_DATE" >> $GITHUB_OUTPUT
+        echo "milestone_due_date=$MILESTONE_DUE_DATE" >> $GITHUB_OUTPUT
+
         echo "::notice::Progress calculation successful: ${PERCENTAGE}% (${DONE}/${TOTAL})"
+        echo "::notice::  Version: ${VERSION}, Critical Priority: ${BLOCKER_DONE}/${BLOCKER_TOTAL}, High Priority: ${MUSTDO_DONE}/${MUSTDO_TOTAL}, Medium Priority: ${MEDIUM_DONE}/${MEDIUM_TOTAL}, Low Priority: ${LOW_DONE}/${LOW_TOTAL}"
+        echo "::notice::  Latest release: ${LATEST_RELEASE_TAG} (${LATEST_RELEASE_DATE}), Milestone due date: ${MILESTONE_DUE_DATE}"
         
         # Clean up
         rm -f progress_output.txt
@@ -134,117 +164,72 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GIST_TOKEN }}
         GIST_ID: ${{ secrets.GIST_ID }}
+        PERCENTAGE: ${{ steps.progress.outputs.percentage }}
+        DONE: ${{ steps.progress.outputs.done }}
+        TOTAL: ${{ steps.progress.outputs.total }}
+        BLOCKER_DONE: ${{ steps.progress.outputs.blocker_done }}
+        BLOCKER_TOTAL: ${{ steps.progress.outputs.blocker_total }}
+        MUSTDO_DONE: ${{ steps.progress.outputs.mustdo_done }}
+        MUSTDO_TOTAL: ${{ steps.progress.outputs.mustdo_total }}
+        MEDIUM_DONE: ${{ steps.progress.outputs.medium_done }}
+        MEDIUM_TOTAL: ${{ steps.progress.outputs.medium_total }}
+        LOW_DONE: ${{ steps.progress.outputs.low_done }}
+        LOW_TOTAL: ${{ steps.progress.outputs.low_total }}
+        VERSION: ${{ steps.progress.outputs.version }}
+        LATEST_RELEASE_TAG: ${{ steps.progress.outputs.latest_release_tag }}
+        LATEST_RELEASE_DATE: ${{ steps.progress.outputs.latest_release_date }}
+        MILESTONE_DUE_DATE: ${{ steps.progress.outputs.milestone_due_date }}
       run: |
-        PERCENTAGE="${{ steps.progress.outputs.percentage }}"
-        DONE="${{ steps.progress.outputs.done }}"
-        TOTAL="${{ steps.progress.outputs.total }}"
-        
-        echo "::notice::Updating badge with: ${PERCENTAGE}% (${DONE}/${TOTAL})"
-        
-        # Use integer comparison for more reliable thresholds
-        PERCENTAGE_INT="${PERCENTAGE%.*}"
-        # Determine badge color and status with cleaner logic
-        if [ "$PERCENTAGE_INT" -ge 90 ]; then
-          COLOR="brightgreen"
-          STATUS="🟢 Readying for Deployment"
-        elif [ "$PERCENTAGE_INT" -ge 60 ]; then
-          COLOR="yellow"
-          STATUS="🟡 Nearing Completion"
-        elif [ "$PERCENTAGE_INT" -ge 40 ]; then
-          COLOR="orange"
-          STATUS="🟠 In Development"
-        else
-          COLOR="red"
-          STATUS="🔴 Initial Phase"
-        fi
-        
-        echo "::notice title=Release Progress::${PERCENTAGE}% Complete (${DONE}/${TOTAL}) - ${STATUS}"
-        
-        # Create badge JSON for shields.io endpoint with proper escaping (\($done)/\($total))
-        BADGE_JSON=$(jq -n \
-          --arg percentage "$PERCENTAGE" \
-          --arg done "$DONE" \
-          --arg total "$TOTAL" \
-          --arg color "$COLOR" \
-          '{
-            "schemaVersion": 1,
-            "label": "Release Progress",
-            "message": "\($percentage)%",
-            "color": $color,
-            "style": "flat-square"
-          }')
-          
-        # Validate JSON was created successfully
-        if [ -z "$BADGE_JSON" ] || ! echo "$BADGE_JSON" | jq empty 2>/dev/null; then
-          echo "::error::Failed to generate valid badge JSON"
-          exit 1
-        fi
-          
-        # The filename in the Gist must match the one created manually
-        GIST_NAME="release-progress-${GITHUB_REPOSITORY##*/}.json"
-        echo "::notice::Updating Gist file: $GIST_NAME"
-        
-        # Create the request payload
+        # Execute dedicated badge generation script
+        # This separates concerns: YAML orchestrates, scripts implement logic
+        bash .github/workflows/update-badge.sh
+
+    - name: Update failure badge on error
+      if: failure()
+      env:
+        GITHUB_TOKEN: ${{ secrets.GIST_TOKEN }}
+        GIST_ID: ${{ secrets.GIST_ID }}
+      run: |
+        rm -f progress_output.txt
+        echo "::warning::Workflow failed - updating badges to FAILURE state"
+
+        REPO_NAME="${GITHUB_REPOSITORY##*/}"
+        BLOCKER_GIST_NAME="release-blocker-${REPO_NAME}.json"
+        MUSTDO_GIST_NAME="release-mustdo-${REPO_NAME}.json"
+        MEDIUM_GIST_NAME="release-medium-${REPO_NAME}.json"
+        LOW_GIST_NAME="release-low-${REPO_NAME}.json"
+
+        FAILURE_BADGE=$(jq -n '{
+          "schemaVersion": 1,
+          "label": "Release Progress",
+          "message": "FAILURE",
+          "color": "BF00FF",
+          "style": "flat-square"
+        }')
+
         REQUEST_PAYLOAD=$(jq -n \
-          --arg filename "$GIST_NAME" \
-          --argjson content "$BADGE_JSON" \
+          --arg blocker_filename "$BLOCKER_GIST_NAME" \
+          --arg mustdo_filename "$MUSTDO_GIST_NAME" \
+          --arg medium_filename "$MEDIUM_GIST_NAME" \
+          --arg low_filename "$LOW_GIST_NAME" \
+          --argjson content "$FAILURE_BADGE" \
           '{
             "files": {
-              ($filename): {
-                "content": ($content | tostring)
-              }
+              ($blocker_filename): { "content": ($content | tostring) },
+              ($mustdo_filename): { "content": ($content | tostring) },
+              ($medium_filename): { "content": ($content | tostring) },
+              ($low_filename): { "content": ($content | tostring) }
             }
           }')
-        
-        # Update the existing Gist with response validation
-        echo "Updating Gist: ${GIST_ID}"
-        RESPONSE=$(curl -s -w "\n%{http_code}" -L -X PATCH \
+
+        HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" -L -X PATCH \
           -H "Authorization: token ${GITHUB_TOKEN}" \
           -H "Accept: application/vnd.github.v3+json" \
           "https://api.github.com/gists/${GIST_ID}" \
           -d "$REQUEST_PAYLOAD")
-        
-        # Extract HTTP status code (last line) and response body
-        HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
-        RESPONSE_BODY=$(echo "$RESPONSE" | head -n -1)
-        
-        # Validate API response
+
         if [ "$HTTP_CODE" != "200" ]; then
-          echo "::error::Gist update failed with HTTP status $HTTP_CODE"
-          echo "Response body: $RESPONSE_BODY"
-          exit 1
+          echo "::warning::Failed to update failure badges (HTTP $HTTP_CODE)"
+        else
+          echo "::notice::Failure badges updated successfully"
         fi
-        
-        echo "::notice::Gist updated successfully"
-        
-        # Generate badge URL for use in README
-        BADGE_URL="https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/${GITHUB_REPOSITORY_OWNER}-Bot/${GIST_ID}/raw/${GIST_NAME}"
-        PROJECT_URL="https://github.com/${GITHUB_REPOSITORY}/projects/39"
-        
-        echo "::notice::Badge URL generated: $BADGE_URL"
-        echo "badge_url=$BADGE_URL" >> $GITHUB_OUTPUT
-        echo "project_url=$PROJECT_URL" >> $GITHUB_OUTPUT
-          
-        # Create enhanced step summary
-        echo "## 📊 Release Progress: ${PERCENTAGE}%" >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
-        echo "**Status:** ${STATUS}" >> $GITHUB_STEP_SUMMARY
-        echo "**Progress:** ${DONE} of ${TOTAL} release blockers completed" >> $GITHUB_STEP_SUMMARY
-        echo "**Badge Color:** ${COLOR}" >> $GITHUB_STEP_SUMMARY
-        echo "**Gist ID:** ${GIST_ID}" >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
-        echo "### Badge URLs" >> $GITHUB_STEP_SUMMARY
-        echo "**Markdown:** \`[![Release Progress](${BADGE_URL})](${PROJECT_URL})\`" >> $GITHUB_STEP_SUMMARY
-        echo "**Image Only:** \`![Release Progress](${BADGE_URL})\`" >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
-        echo "### Badge JSON Preview" >> $GITHUB_STEP_SUMMARY
-        echo '```json' >> $GITHUB_STEP_SUMMARY
-        echo "$BADGE_JSON" >> $GITHUB_STEP_SUMMARY
-        echo '```' >> $GITHUB_STEP_SUMMARY
-        
-    - name: Cleanup on failure
-      if: failure()
-      run: |
-        echo "::warning::Workflow failed - cleaning up temporary files"
-        rm -f progress_output.txt
-        echo "::notice::Check the logs above for specific error details"

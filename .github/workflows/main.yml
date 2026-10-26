@@ -35,6 +35,16 @@ on:
         required: false
         default: "jni"
         type: string
+      win_runner:
+        description: "Windows runner version to use (windows-2022, windows-latest, etc.)"
+        required: false
+        default: "windows-latest"
+        type: string
+      win_vs_generator:
+        description: "CMake generator to use for Visual Studio"
+        required: false
+        default: "Visual Studio 18 2026"
+        type: string
 
 permissions:
   contents: read
@@ -71,7 +81,7 @@ jobs:
           # No Fortran, parallel, or VFDs that rely on POSIX things
           - name: "Windows MSVC"
             ostype: windows
-            os: windows-latest
+            os: ${{ inputs.win_runner }}
             shared: ON
             cpp: ON
             fortran: OFF
@@ -84,14 +94,14 @@ jobs:
             parallel: OFF
             mirror_vfd: OFF
             direct_vfd: OFF
-            generator: "-G \"Visual Studio 17 2022\" -A x64"
+            generator: "-G \"${{ inputs.win_vs_generator }}\" -A x64"
             run_tests: true
 
           # Linux (Ubuntu) w/ gcc
           #
           - name: "Ubuntu gcc"
             ostype: ubuntu
-            os: ubuntu-latest
+            os: ubuntu-24.04
             shared: ON
             cpp: ON
             fortran: ON
@@ -111,7 +121,7 @@ jobs:
           #
           - name: "MacOS Clang"
             ostype: macos
-            os: macos-latest
+            os: macos-15
             shared: ON
             cpp: ON
             fortran: OFF
@@ -138,6 +148,13 @@ jobs:
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - name: Get Sources
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Setup Doxygen
+        uses: ./.github/actions/setup-doxygen
+
       #Useful for debugging
       - name: Dump matrix context
         run: echo '${{ toJSON(matrix) }}'
@@ -151,17 +168,8 @@ jobs:
 
       # CMake gets libaec from fetchcontent
 
-      - name: Install Dependencies (macOS)
-        run: brew install ninja curl
-        if: ${{ matrix.ostype == 'macos' }}
-
-      - name: Install Dependencies
-        uses: ssciwr/doxygen-install@501e53b879da7648ab392ee226f5b90e42148449 # v1
-        with:
-          version: "1.13.2"
-
       - name: Install CMake
-        uses: lukka/get-cmake@9e07ecdcee1b12e5037e42f410b67f03e2f626e1 # latest
+        uses: lukka/get-cmake@fffaaafeea488556c2c12dad60690008bc1caacb # latest
         with:
             cmakeVersion: ${{ inputs.cmake_version }}
             ninjaVersion: latest
@@ -174,7 +182,7 @@ jobs:
 
       - name: Set up Java (if specified or FFM required)
         if: inputs.java_version != 'auto' || inputs.force_java_implementation == 'ffm'
-        uses: actions/setup-java@f2beeb24e141e01a676f977032f5a29d81c9e27e # v5
+        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v5
         with:
           distribution: ${{ inputs.force_java_implementation == 'ffm' && 'oracle' || 'temurin' }}
           java-version: |
@@ -197,10 +205,6 @@ jobs:
           echo "CXX=cl.exe" >> $GITHUB_ENV
           echo "CC=cl.exe" >> $GITHUB_ENV
         if:  matrix.ostype == 'windows'
-
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - name: Get Sources
-        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
 
       - name: Setup jextract (FFM builds only)
         if: ${{ inputs.force_java_implementation == 'ffm' }}
@@ -290,6 +294,8 @@ jobs:
             -DHDF5_BUILD_JAVA:BOOL=OFF \
             -DHDF5_BUILD_HL_LIB:BOOL=OFF \
             -DHDF5_BUILD_DOC=OFF \
+            -DHDF5_ENABLE_ZLIB_SUPPORT:BOOL=${{ matrix.zlibfc }} \
+            -DHDF5_ENABLE_SZIP_SUPPORT:BOOL=${{ matrix.libaecfc }} \
             -DLIBAEC_USE_LOCALCONTENT=${{ matrix.localaec }} \
             -DZLIB_USE_LOCALCONTENT=${{ matrix.localzlib }} \
             -DHDF5_ENABLE_MIRROR_VFD:BOOL=${{ matrix.mirror_vfd }} \
@@ -335,15 +341,15 @@ jobs:
 
       # Save files created by CTest script
       - name: Save published binary (Windows)
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v5
         with:
-              name: zip-vs2022_cl-${{ inputs.build_mode }}-${{ inputs.save_binary }}-binary
+              name: zip-vs2026_cl-${{ inputs.build_mode }}-${{ inputs.save_binary }}-binary
               path: ${{ runner.workspace }}/build/HDF5-*-win64.zip
               if-no-files-found: error # 'warn' or 'ignore' are also available, defaults to `warn`
         if:  ${{ (matrix.ostype == 'windows') && ( inputs.save_binary != 'skip') }}
 
       - name: Save published binary (linux)
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v5
         with:
               name: tgz-ubuntu-2404_gcc-${{ inputs.build_mode }}-${{ inputs.save_binary }}-binary
               path: ${{ runner.workspace }}/build/HDF5-*-Linux.tar.gz
@@ -351,9 +357,9 @@ jobs:
         if:  ${{ (matrix.ostype == 'ubuntu') && ( inputs.save_binary != 'skip') }}
 
       - name: Save published binary (Mac_latest)
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v5
         with:
-              name: tgz-macos14_clang-${{ inputs.build_mode }}-${{ inputs.save_binary }}-binary
+              name: tgz-macos15_clang-${{ inputs.build_mode }}-${{ inputs.save_binary }}-binary
               path: ${{ runner.workspace }}/build/HDF5-*-Darwin.tar.gz
               if-no-files-found: error # 'warn' or 'ignore' are also available, defaults to `warn`
         if: ${{ (matrix.ostype == 'macos') && ( inputs.save_binary != 'skip') }}

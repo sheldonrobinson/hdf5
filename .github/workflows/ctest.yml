@@ -90,16 +90,11 @@ jobs:
       - name: Install Dependencies (Windows)
         run: choco install ninja
 
-      - name: Install Dependencies
-        uses: ssciwr/doxygen-install@501e53b879da7648ab392ee226f5b90e42148449 # v1
-        with:
-          version: "1.13.2"
-
       - name: Enable Developer Command Prompt
         uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756 # v1.13.0
 
       - name: Install CMake
-        uses: lukka/get-cmake@9e07ecdcee1b12e5037e42f410b67f03e2f626e1 # latest
+        uses: lukka/get-cmake@fffaaafeea488556c2c12dad60690008bc1caacb # latest
         with:
             cmakeVersion: ${{ inputs.cmake_version }}
             ninjaVersion: latest
@@ -111,7 +106,7 @@ jobs:
           cmake --version
 
       - name: Set up JDK 21
-        uses: actions/setup-java@f2beeb24e141e01a676f977032f5a29d81c9e27e # v5
+        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v5
         with:
           java-version: '21'
           distribution: 'temurin'
@@ -132,7 +127,7 @@ jobs:
 
       # Get files created by release script
       - name: Get zip-tarball (Windows)
-        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
         with:
               name: zip-tarball
               path: ${{ github.workspace }}
@@ -179,7 +174,7 @@ jobs:
         shell: bash
 
       - name: Sign files with Trusted Signing
-        uses: azure/trusted-signing-action@fc390cf8ed0f14e248a542af1d838388a47c7a7c # v0.5.10
+        uses: azure/trusted-signing-action@c7ab2a863ab5f9a846ddb8265964877ef296ee82 # v2.0.0
         with:
           azure-tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           azure-client-id: ${{ secrets.AZURE_CLIENT_ID }}
@@ -203,14 +198,14 @@ jobs:
           Copy-Item -Path ${{ runner.workspace }}/hdf5/build/${{ inputs.preset_name }}-MSVC/README.md -Destination ${{ runner.workspace }}/build/hdf5/
           Copy-Item -Path ${{ runner.workspace }}/hdf5/build/${{ inputs.preset_name }}-MSVC/* -Destination ${{ runner.workspace }}/build/hdf5/ -Include *.zip
           cd "${{ runner.workspace }}/build"
-          7z a -tzip ${{ steps.set-file-base.outputs.FILE_BASE }}-win-vs2022_cl.zip hdf5
+          7z a -tzip ${{ steps.set-file-base.outputs.FILE_BASE }}-win-vs2026_cl.zip hdf5
         shell: pwsh
 
       - name: Publish msi binary (Windows)
         id: publish-ctest-msi-binary
         run: |
           mkdir "${{ runner.workspace }}/buildmsi"
-          Copy-Item -Path ${{ runner.workspace }}/hdf5/build/${{ inputs.preset_name }}-MSVC/* -Destination ${{ runner.workspace }}/buildmsi/${{ steps.set-file-base.outputs.FILE_BASE }}-win-vs2022_cl.msi -Include *.msi
+          Copy-Item -Path ${{ runner.workspace }}/hdf5/build/${{ inputs.preset_name }}-MSVC/* -Destination ${{ runner.workspace }}/buildmsi/${{ steps.set-file-base.outputs.FILE_BASE }}-win-vs2026_cl.msi -Include *.msi
         shell: pwsh
 
       - name: List files in the space (Windows)
@@ -221,38 +216,42 @@ jobs:
 
       # Save files created by CTest script
       - name: Save published binary (Windows)
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v5
         with:
-              name: zip-vs2022_cl-binary
-              path: ${{ runner.workspace }}/build/${{ steps.set-file-base.outputs.FILE_BASE }}-win-vs2022_cl.zip
+              name: zip-vs2026_cl-binary
+              path: ${{ runner.workspace }}/build/${{ steps.set-file-base.outputs.FILE_BASE }}-win-vs2026_cl.zip
               if-no-files-found: error # 'warn' or 'ignore' are also available, defaults to `warn`
 
       - name: Save published msi binary (Windows)
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v5
         with:
-              name: msi-vs2022_cl-binary
-              path: ${{ runner.workspace }}/buildmsi/${{ steps.set-file-base.outputs.FILE_BASE }}-win-vs2022_cl.msi
+              name: msi-vs2026_cl-binary
+              path: ${{ runner.workspace }}/buildmsi/${{ steps.set-file-base.outputs.FILE_BASE }}-win-vs2026_cl.msi
               if-no-files-found: error # 'warn' or 'ignore' are also available, defaults to `warn`
 
-  build_and_test_linux:
-  # Linux (Ubuntu) w/ gcc
+  build_and_test_win_arm64:
+  # Windows ARM64 w/ MSVC (Native)
   #
-    name: "Ubuntu gcc"
-    runs-on: ubuntu-latest
+    name: "Windows MSVC ARM64 CTest"
+    runs-on: windows-11-arm
     needs: [check-secret]
     steps:
-      - name: Install Dependencies (Linux)
-        run: |
-          sudo apt-get update
-          sudo apt-get install ninja-build graphviz
+      - name: Install Dependencies (Windows ARM64)
+        run: choco install ninja
 
-      - name: Install Dependencies
-        uses: ssciwr/doxygen-install@501e53b879da7648ab392ee226f5b90e42148449 # v1
+      - name: Get Sources
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Setup Doxygen
+        uses: ./.github/actions/setup-doxygen
+
+      - name: Enable Developer Command Prompt
+        uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756 # v1.13.0
         with:
-          version: "1.13.2"
+          arch: arm64
 
       - name: Install CMake
-        uses: lukka/get-cmake@9e07ecdcee1b12e5037e42f410b67f03e2f626e1 # latest
+        uses: lukka/get-cmake@fffaaafeea488556c2c12dad60690008bc1caacb # latest
         with:
             cmakeVersion: ${{ inputs.cmake_version }}
             ninjaVersion: latest
@@ -264,7 +263,178 @@ jobs:
           cmake --version
 
       - name: Set up JDK 21
-        uses: actions/setup-java@f2beeb24e141e01a676f977032f5a29d81c9e27e # v5
+        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v5
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          architecture: 'aarch64'
+
+      - name: Set environment for MSVC ARM64 (Windows)
+        run: |
+          echo "CXX=cl.exe" >> $GITHUB_ENV
+          echo "CC=cl.exe" >> $GITHUB_ENV
+        shell: bash
+
+      - name: Set file base name (Windows ARM64)
+        id: set-file-base
+        run: |
+          FILE_NAME_BASE=$(echo "${{ inputs.file_base }}")
+          echo "FILE_BASE=$FILE_NAME_BASE" >> $GITHUB_OUTPUT
+          if [[ '${{ inputs.use_environ }}' == 'release' ]]
+          then
+            SOURCE_NAME_BASE=$(echo "${{ inputs.snap_name }}")
+          else
+            SOURCE_NAME_BASE=$(echo "hdfsrc")
+          fi
+          echo "SOURCE_BASE=$SOURCE_NAME_BASE" >> $GITHUB_OUTPUT
+        shell: bash
+
+      # Get files created by release script
+      - name: Get zip-tarball (Windows ARM64)
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
+        with:
+              name: zip-tarball
+              path: ${{ github.workspace }}
+
+      - name: using powershell
+        shell: pwsh
+        run: Get-Location
+
+      - name: List files for the space (Windows ARM64)
+        run: |
+              Get-ChildItem -Path ${{ github.workspace }}
+              Get-ChildItem -Path ${{ runner.workspace }}
+        shell: pwsh
+
+      - name: Uncompress source (Windows ARM64)
+        working-directory: ${{ github.workspace }}
+        run: 7z x ${{ steps.set-file-base.outputs.FILE_BASE }}.zip
+        shell: bash
+
+      - name: Install TrustedSigning (Windows ARM64)
+        run: |
+            Invoke-WebRequest -Uri https://dist.nuget.org/win-x86-commandline/latest/nuget.exe -OutFile .\nuget.exe
+            .\nuget.exe install Microsoft.Windows.SDK.BuildTools -Version 10.0.22621.3233 -x
+            .\nuget.exe install Microsoft.Trusted.Signing.Client -Version 1.0.86 -x
+        shell: pwsh
+        if: ${{ needs.check-secret.outputs.sign-state == 'exists' }}
+
+      - name: create-json
+        id: create-json
+        uses: jsdaniell/create-json@b8e77fa01397ca39cc4a6198cc29a3be5481afef # v1.2.3
+        with:
+            name: "credentials.json"
+            dir: '${{ steps.set-file-base.outputs.SOURCE_BASE }}'
+            json: '{"Endpoint": "${{ secrets.AZURE_ENDPOINT }}","CodeSigningAccountName": "${{ secrets.AZURE_CODE_SIGNING_NAME }}","CertificateProfileName": "${{ secrets.AZURE_CERT_PROFILE_NAME }}"}'
+        if: ${{ needs.check-secret.outputs.sign-state == 'exists' }}
+
+      - name: Install WiX v3.14
+        run: |
+          Invoke-WebRequest -Uri https://github.com/wixtoolset/wix3/releases/download/wix3141rtm/wix314-binaries.zip -OutFile wix314-binaries.zip
+          Expand-Archive -Path wix314-binaries.zip -DestinationPath C:\wix314
+          echo "C:\wix314" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          echo "WIX=C:\wix314" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+        shell: pwsh
+
+      - name: Run CTest (Windows ARM64)
+        env:
+          BINSIGN: ${{ needs.check-secret.outputs.sign-state }}
+          SIGNTOOLDIR: ${{ github.workspace }}/Microsoft.Windows.SDK.BuildTools/bin/10.0.22621.0/arm64
+        run: |
+          cd "${{ runner.workspace }}/hdf5/${{ steps.set-file-base.outputs.SOURCE_BASE }}"
+          cmake --workflow --preset=${{ inputs.preset_name }}-MSVC-ARM64 --fresh
+        shell: bash
+
+      - name: Sign files with Trusted Signing
+        uses: azure/trusted-signing-action@c7ab2a863ab5f9a846ddb8265964877ef296ee82 # v2.0.0
+        with:
+          azure-tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          azure-client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          azure-client-secret: ${{ secrets.AZURE_CLIENT_SECRET }}
+          endpoint: ${{ secrets.AZURE_ENDPOINT }}
+          trusted-signing-account-name: ${{ secrets.AZURE_CODE_SIGNING_NAME }}
+          certificate-profile-name: ${{ secrets.AZURE_CERT_PROFILE_NAME }}
+          files-folder: ${{ runner.workspace }}/hdf5/build/${{ inputs.preset_name }}-MSVC-ARM64
+          files-folder-filter: msi
+          file-digest: SHA256
+          timestamp-rfc3161: http://timestamp.acs.microsoft.com
+          timestamp-digest: SHA256
+        if: ${{ needs.check-secret.outputs.sign-state == 'exists' }}
+
+      - name: Publish binary (Windows ARM64)
+        id: publish-ctest-binary
+        run: |
+          mkdir "${{ runner.workspace }}/build"
+          mkdir "${{ runner.workspace }}/build/hdf5"
+          Copy-Item -Path ${{ runner.workspace }}/hdf5/${{ steps.set-file-base.outputs.SOURCE_BASE }}/LICENSE -Destination ${{ runner.workspace }}/build/hdf5/
+          Copy-Item -Path ${{ runner.workspace }}/hdf5/build/${{ inputs.preset_name }}-MSVC-ARM64/README.md -Destination ${{ runner.workspace }}/build/hdf5/
+          Copy-Item -Path ${{ runner.workspace }}/hdf5/build/${{ inputs.preset_name }}-MSVC-ARM64/* -Destination ${{ runner.workspace }}/build/hdf5/ -Include *.zip
+          cd "${{ runner.workspace }}/build"
+          7z a -tzip ${{ steps.set-file-base.outputs.FILE_BASE }}-win-vs2026_cl_arm64.zip hdf5
+        shell: pwsh
+
+      - name: Publish msi binary (Windows ARM64)
+        id: publish-ctest-msi-binary
+        run: |
+          mkdir "${{ runner.workspace }}/buildmsi"
+          Copy-Item -Path ${{ runner.workspace }}/hdf5/build/${{ inputs.preset_name }}-MSVC-ARM64/* -Destination ${{ runner.workspace }}/buildmsi/${{ steps.set-file-base.outputs.FILE_BASE }}-win-vs2026_cl_arm64.msi -Include *.msi
+        shell: pwsh
+
+      - name: List files in the space (Windows ARM64)
+        run: |
+              Get-ChildItem -Path ${{ github.workspace }}
+              Get-ChildItem -Path ${{ runner.workspace }}
+        shell: pwsh
+
+      # Save files created by CTest script
+      - name: Save published binary (Windows ARM64)
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v5
+        with:
+              name: zip-vs2026_cl_arm64-binary
+              path: ${{ runner.workspace }}/build/${{ steps.set-file-base.outputs.FILE_BASE }}-win-vs2026_cl_arm64.zip
+              if-no-files-found: error # 'warn' or 'ignore' are also available, defaults to `warn`
+
+      - name: Save published msi binary (Windows ARM64)
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v5
+        with:
+              name: msi-vs2026_cl_arm64-binary
+              path: ${{ runner.workspace }}/buildmsi/${{ steps.set-file-base.outputs.FILE_BASE }}-win-vs2026_cl_arm64.msi
+              if-no-files-found: error # 'warn' or 'ignore' are also available, defaults to `warn`
+
+  build_and_test_linux:
+  # Linux (Ubuntu) w/ gcc
+  #
+    name: "Ubuntu gcc"
+    runs-on: ubuntu-24.04
+    needs: [check-secret]
+    steps:
+      - name: Install Dependencies (Linux)
+        run: |
+          sudo apt-get update
+          sudo apt-get install ninja-build graphviz
+
+      - name: Get Actions
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          sparse-checkout: .github/actions
+
+      - name: Setup Doxygen
+        uses: ./.github/actions/setup-doxygen
+
+      - name: Install CMake
+        uses: lukka/get-cmake@fffaaafeea488556c2c12dad60690008bc1caacb # latest
+        with:
+            cmakeVersion: ${{ inputs.cmake_version }}
+            ninjaVersion: latest
+
+      - name: Check CMake Version
+        shell: bash
+        run: |
+          which cmake
+          cmake --version
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v5
         with:
           java-version: '21'
           distribution: 'temurin'
@@ -284,7 +454,7 @@ jobs:
 
       # Get files created by release script
       - name: Get tgz-tarball (Linux)
-        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
         with:
               name: tgz-tarball
               path: ${{ github.workspace }}
@@ -350,29 +520,44 @@ jobs:
 
       # Save files created by CTest script
       - name: Save published binary (Linux)
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v5
         with:
               name: tgz-ubuntu-2404_gcc-binary
               path: ${{ runner.workspace }}/build/${{ steps.set-file-base.outputs.FILE_BASE }}-ubuntu-2404_gcc.tar.gz
               if-no-files-found: error # 'warn' or 'ignore' are also available, defaults to `warn`
 
       - name: Save published binary deb (Linux)
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v5
         with:
               name: deb-ubuntu-2404_gcc-binary
               path: ${{ runner.workspace }}/builddeb/${{ steps.set-file-base.outputs.FILE_BASE }}-ubuntu-2404_gcc.deb
               if-no-files-found: error # 'warn' or 'ignore' are also available, defaults to `warn`
 
       - name: Save published binary rpm (Linux)
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v5
         with:
               name: rpm-ubuntu-2404_gcc-binary
               path: ${{ runner.workspace }}/buildrpm/${{ steps.set-file-base.outputs.FILE_BASE }}-ubuntu-2404_gcc.rpm
               if-no-files-found: error # 'warn' or 'ignore' are also available, defaults to `warn`
 
+      # Verify the Doxygen tag file was generated inside the HTML output
+      # directory so it is captured by the docs-doxygen artifact below and
+      # published alongside the HTML documentation (e.g., to
+      # https://support.hdfgroup.org/documentation/hdf5/latest/hdf5.tag).
+      - name: Verify hdf5.tag is present (Linux)
+        env:
+          TAG_FILE: ${{ runner.workspace }}/hdf5/build/${{ steps.run-ctest.outputs.ACTIVE_PRESET }}/hdf5lib_docs/html/hdf5.tag
+        run: |
+          if [ ! -f "$TAG_FILE" ]; then
+            echo "::error::Expected doxygen tag file not found: $TAG_FILE"
+            echo "The hdf5.tag file must be generated inside the doxygen html output directory so it is included in the docs-doxygen artifact."
+            exit 1
+          fi
+          echo "Found doxygen tag file: $TAG_FILE"
+
       # Save doxygen files created by CTest script
       - name: Save published doxygen (Linux)
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v5
         with:
               name: docs-doxygen
               path: ${{ runner.workspace }}/hdf5/build/${{ steps.run-ctest.outputs.ACTIVE_PRESET }}/hdf5lib_docs/html
@@ -403,7 +588,7 @@ jobs:
 
       - name: Upload Maven artifacts (Linux)
         if: ${{ inputs.maven_enabled == true }}
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v5
         with:
               name: Linux-${{ inputs.preset_name }}-artifacts
               path: ${{ runner.workspace }}/maven-artifacts
@@ -413,17 +598,9 @@ jobs:
   # MacOS w/ Clang
   #
     name: "MacOS Clang"
-    runs-on: macos-latest
+    runs-on: macos-15
     needs: [check-secret]
     steps:
-      - name: Install Dependencies (MacOS_latest)
-        run: brew install ninja
-
-      - name: Install Dependencies
-        uses: ssciwr/doxygen-install@501e53b879da7648ab392ee226f5b90e42148449 # v1
-        with:
-          version: "1.13.2"
-
       - name: check clang version
         shell: bash
         run: |
@@ -431,7 +608,7 @@ jobs:
           clang -v
 
       - name: Install CMake
-        uses: lukka/get-cmake@9e07ecdcee1b12e5037e42f410b67f03e2f626e1 # latest
+        uses: lukka/get-cmake@fffaaafeea488556c2c12dad60690008bc1caacb # latest
         with:
             cmakeVersion: ${{ inputs.cmake_version }}
             ninjaVersion: latest
@@ -465,7 +642,7 @@ jobs:
         if: ${{ needs.check-secret.outputs.sign-state == 'exists' }}
 
       - name: Set up JDK 19
-        uses: actions/setup-java@f2beeb24e141e01a676f977032f5a29d81c9e27e # v5
+        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v5
         with:
           java-version: '21'
           distribution: 'temurin'
@@ -485,7 +662,7 @@ jobs:
 
       # Get files created by release script
       - name: Get tgz-tarball (MacOS_latest)
-        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
         with:
               name: tgz-tarball
               path: ${{ github.workspace }}
@@ -500,7 +677,7 @@ jobs:
 
       # symlinks the compiler executables to a common location 
       - name: Setup GNU Fortran
-        uses: fortran-lang/setup-fortran@47809fdb6e637da656ce9ada436527b240c1287f # v1
+        uses: fortran-lang/setup-fortran@be037f0a45b1160f139d4ccd0b96f9e9bfd6a682 # v1
         id: setup-fortran
         with:
           compiler: gcc
@@ -611,14 +788,14 @@ jobs:
           cp ${{ runner.workspace }}/hdf5/build/${{ inputs.preset_name }}-macos-Clang/README.md ${{ runner.workspace }}/build/hdf5
           cp ${{ runner.workspace }}/hdf5/build/${{ inputs.preset_name }}-macos-Clang/*.tar.gz ${{ runner.workspace }}/build/hdf5
           cd "${{ runner.workspace }}/build"
-          tar -zcvf ${{ steps.set-file-base.outputs.FILE_BASE }}-macos14_clang.tar.gz hdf5
+          tar -zcvf ${{ steps.set-file-base.outputs.FILE_BASE }}-macos15_clang.tar.gz hdf5
         shell: bash
 
       - name: Publish dmg binary (MacOS_latest)
         id: publish-ctest-dmg-binary
         run: |
           mkdir "${{ runner.workspace }}/builddmg"
-          cp ${{ runner.workspace }}/hdf5/build/${{ inputs.preset_name }}-macos-Clang/*.dmg ${{ runner.workspace }}/builddmg/${{ steps.set-file-base.outputs.FILE_BASE }}-macos14_clang.dmg
+          cp ${{ runner.workspace }}/hdf5/build/${{ inputs.preset_name }}-macos-Clang/*.dmg ${{ runner.workspace }}/builddmg/${{ steps.set-file-base.outputs.FILE_BASE }}-macos15_clang.dmg
         shell: bash
 
       - name: List files in the space (MacOS_latest)
@@ -628,38 +805,38 @@ jobs:
 
       # Save files created by CTest script
       - name: Save published binary (MacOS_latest)
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v5
         with:
-              name: tgz-macos14_clang-binary
-              path: ${{ runner.workspace }}/build/${{ steps.set-file-base.outputs.FILE_BASE }}-macos14_clang.tar.gz
+              name: tgz-macos15_clang-binary
+              path: ${{ runner.workspace }}/build/${{ steps.set-file-base.outputs.FILE_BASE }}-macos15_clang.tar.gz
               if-no-files-found: error # 'warn' or 'ignore' are also available, defaults to `warn`
 
       - name: Save published dmg binary (MacOS_latest)
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v5
         with:
-              name: tgz-macos14_clang-dmg-binary
-              path: ${{ runner.workspace }}/builddmg/${{ steps.set-file-base.outputs.FILE_BASE }}-macos14_clang.dmg
+              name: tgz-macos15_clang-dmg-binary
+              path: ${{ runner.workspace }}/builddmg/${{ steps.set-file-base.outputs.FILE_BASE }}-macos15_clang.dmg
               if-no-files-found: error # 'warn' or 'ignore' are also available, defaults to `warn`
 
   build_and_test_S3_linux:
   # Linux S3 (Ubuntu) w/ gcc
   #
     name: "Ubuntu gcc S3"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Install Dependencies (Linux S3)
         run: |
           sudo apt-get update
-          sudo apt-get install ninja-build doxygen
+          sudo apt-get install ninja-build
 
       - name: Install CMake
-        uses: lukka/get-cmake@9e07ecdcee1b12e5037e42f410b67f03e2f626e1 # latest
+        uses: lukka/get-cmake@fffaaafeea488556c2c12dad60690008bc1caacb # latest
         with:
             cmakeVersion: ${{ inputs.cmake_version }}
             ninjaVersion: latest
 
       - name: Install aws-c-s3 (Cached installation)
-        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
         with:
           name: libaws-c-s3-Release
 
@@ -692,7 +869,7 @@ jobs:
 
       # Get files created by release script
       - name: Get tgz-tarball (Linux S3)
-        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
         with:
               name: tgz-tarball
               path: ${{ github.workspace }}
@@ -730,7 +907,7 @@ jobs:
 
       # Save files created by CTest script
       - name: Save published binary (Linux S3)
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v5
         with:
               name: tgz-ubuntu-2404_gcc_s3-binary
               path: ${{ runner.workspace }}/build/${{ steps.set-file-base.outputs.FILE_BASE }}-ubuntu-2404_gcc_s3.tar.gz
@@ -741,21 +918,27 @@ jobs:
   # Windows w/ OneAPI
   #
     name: "Windows Intel CTest"
-    runs-on: windows-latest
+    runs-on: windows-2022
     needs: [check-secret]
     steps:
       - name: Install Dependencies (Windows_intel)
         run: choco install ninja
 
       - name: add oneAPI to env
-        uses: fortran-lang/setup-fortran@47809fdb6e637da656ce9ada436527b240c1287f # v1
+        uses: fortran-lang/setup-fortran@be037f0a45b1160f139d4ccd0b96f9e9bfd6a682 # v1
         id: setup-fortran
         with:
           compiler: intel
           version: '2025.0'
 
+      - name: Setup Java
+        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          java-version: 21
+          distribution: 'temurin'
+
       - name: Install CMake
-        uses: lukka/get-cmake@9e07ecdcee1b12e5037e42f410b67f03e2f626e1 # latest
+        uses: lukka/get-cmake@fffaaafeea488556c2c12dad60690008bc1caacb # latest
         with:
             cmakeVersion: ${{ inputs.cmake_version }}
             ninjaVersion: latest
@@ -776,7 +959,7 @@ jobs:
 
       # Get files created by release script
       - name: Get zip-tarball (Windows_intel)
-        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
         with:
               name: zip-tarball
               path: ${{ github.workspace }}
@@ -826,7 +1009,7 @@ jobs:
         shell: pwsh
 
       - name: Sign files with Trusted Signing (Windows_intel)
-        uses: azure/trusted-signing-action@fc390cf8ed0f14e248a542af1d838388a47c7a7c # v0.5.10
+        uses: azure/trusted-signing-action@c7ab2a863ab5f9a846ddb8265964877ef296ee82 # v2.0.0
         with:
           azure-tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           azure-client-id: ${{ secrets.AZURE_CLIENT_ID }}
@@ -868,14 +1051,14 @@ jobs:
 
       # Save files created by CTest script
       - name: Save published binary (Windows_intel)
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v5
         with:
               name: zip-vs2022_intel-binary
               path: ${{ runner.workspace }}/build/${{ steps.set-file-base.outputs.FILE_BASE }}-win-vs2022_intel.zip
               if-no-files-found: error # 'warn' or 'ignore' are also available, defaults to `warn`
 
       - name: Save published msi binary (Windows_intel)
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v5
         with:
               name: msi-vs2022_intel-binary
               path: ${{ runner.workspace }}/buildmsi/${{ steps.set-file-base.outputs.FILE_BASE }}-win-vs2022_intel.msi
@@ -885,23 +1068,23 @@ jobs:
   # Linux (Ubuntu) w/ OneAPI
   #
     name: "Ubuntu Intel"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: [check-secret]
     steps:
       - name: Install Dependencies (Linux_intel)
         run: |
           sudo apt-get update
-          sudo apt-get install ninja-build doxygen graphviz
+          sudo apt-get install ninja-build graphviz
 
       - name: add oneAPI to env
-        uses: fortran-lang/setup-fortran@47809fdb6e637da656ce9ada436527b240c1287f # v1
+        uses: fortran-lang/setup-fortran@be037f0a45b1160f139d4ccd0b96f9e9bfd6a682 # v1
         id: setup-fortran
         with:
           compiler: intel
           version: '2025.0'
 
       - name: Install CMake
-        uses: lukka/get-cmake@9e07ecdcee1b12e5037e42f410b67f03e2f626e1 # latest
+        uses: lukka/get-cmake@fffaaafeea488556c2c12dad60690008bc1caacb # latest
         with:
             cmakeVersion: ${{ inputs.cmake_version }}
             ninjaVersion: latest
@@ -921,7 +1104,7 @@ jobs:
 
       # Get files created by release script
       - name: Get tgz-tarball (Linux_intel)
-        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
         with:
               name: tgz-tarball
               path: ${{ github.workspace }}
@@ -962,7 +1145,7 @@ jobs:
 
       # Save files created by CTest script
       - name: Save published binary (Linux_intel)
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v5
         with:
               name: tgz-ubuntu-2404_intel-binary
               path: ${{ runner.workspace }}/build/${{ steps.set-file-base.outputs.FILE_BASE }}-ubuntu-2404_intel.tar.gz

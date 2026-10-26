@@ -37,7 +37,7 @@
 /* Number of entries in an error stack */
 #define H5E_MAX_ENTRIES 32
 
-#ifdef H5_HAVE_THREADSAFE_API
+#ifdef H5_HAVE_THREADS
 /*
  * The per-thread error stack.
  *
@@ -45,12 +45,12 @@
  * by "H5E_stack_t *estack =".
  */
 #define H5E__get_my_stack() H5TS_get_err_stack()
-#else /* H5_HAVE_THREADSAFE_API */
+#else /* H5_HAVE_THREADS */
 /*
  * The current error stack.
  */
 #define H5E__get_my_stack() (H5E_stack_g + 0)
-#endif /* H5_HAVE_THREADSAFE_API */
+#endif /* H5_HAVE_THREADS */
 
 /****************************/
 /* Package Private Typedefs */
@@ -118,7 +118,7 @@ typedef struct H5E_stack_t {
 /* Package Private Variables */
 /*****************************/
 
-#ifndef H5_HAVE_THREADSAFE_API
+#ifndef H5_HAVE_THREADS
 /*
  * The current error stack.
  */
@@ -142,11 +142,11 @@ H5_DLL void         H5E__set_default_auto(H5E_stack_t *stk);
 H5_DLL H5E_stack_t *H5E__get_current_stack(void);
 H5_DLL herr_t       H5E__set_current_stack(H5E_stack_t *estack);
 H5_DLL ssize_t      H5E__get_num(const H5E_stack_t *err_stack);
-H5_DLL herr_t       H5E__push_stack(H5E_stack_t *estack, bool app_entry, const char *file, const char *func,
+H5_DLL htri_t       H5E__push_stack(H5E_stack_t *estack, bool app_entry, const char *file, const char *func,
                                     unsigned line, hid_t cls_id, hid_t maj_id, hid_t min_id, const char *fmt,
                                     va_list *ap);
 H5_DLL herr_t       H5E__print(const H5E_stack_t *estack, FILE *stream, bool bk_compat);
-H5_DLL herr_t       H5E__print2(hid_t err_stack, FILE *stream);
+H5_DLL herr_t       H5E__print2(hid_t err_stack, void *_stream);
 H5_DLL herr_t       H5E__walk(const H5E_stack_t *estack, H5E_direction_t direction, const H5E_walk_op_t *op,
                               void *client_data);
 H5_DLL herr_t       H5E__get_auto(const H5E_stack_t *estack, H5E_auto_op_t *op, void **client_data);

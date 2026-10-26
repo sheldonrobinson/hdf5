@@ -71,7 +71,7 @@ jobs:
             mirror_vfd: OFF
             direct_vfd: OFF
             ros3_vfd: OFF
-            generator: "-G \"Visual Studio 17 2022\" -A x64"
+            generator: "-G \"Visual Studio 18 2026\" -A x64"
             run_tests: true
 
           - name: "Ubuntu Static gcc"
@@ -121,6 +121,13 @@ jobs:
 
   # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - name: Get Sources
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Setup Doxygen
+        uses: ./.github/actions/setup-doxygen
+
       #Useful for debugging
       - name: Dump matrix context
         run: echo '${{ toJSON(matrix) }}'
@@ -134,17 +141,8 @@ jobs:
 
       # CMake gets libaec from fetchcontent
 
-      - name: Install Dependencies (macOS)
-        run: brew install ninja curl
-        if: ${{ matrix.ostype == 'macos' }}
-
-      - name: Install Dependencies
-        uses: ssciwr/doxygen-install@501e53b879da7648ab392ee226f5b90e42148449 # v1
-        with:
-          version: "1.13.2"
-
       - name: Install CMake
-        uses: lukka/get-cmake@9e07ecdcee1b12e5037e42f410b67f03e2f626e1 # latest
+        uses: lukka/get-cmake@fffaaafeea488556c2c12dad60690008bc1caacb # latest
         with:
             cmakeVersion: ${{ inputs.cmake_version }}
             ninjaVersion: latest
@@ -161,10 +159,6 @@ jobs:
           echo "CXX=cl.exe" >> $GITHUB_ENV
           echo "CC=cl.exe" >> $GITHUB_ENV
         if:  matrix.ostype == 'windows'
-
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - name: Get Sources
-        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
 
       # CONFIGURE
       - name: Configure

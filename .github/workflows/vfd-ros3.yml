@@ -77,7 +77,7 @@ jobs:
 
       - name: Install libaws-c-s3 (Ubuntu) (Cached installation)
         if: ${{ matrix.os_name == 'Ubuntu GCC' }}
-        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6.0.0
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: libaws-c-s3-${{ inputs.build_mode }}
 
@@ -104,7 +104,7 @@ jobs:
 
       - name: Set up Java (if specified or FFM required)
         if: inputs.java_version != 'auto' || inputs.force_java_implementation == 'ffm'
-        uses: actions/setup-java@f2beeb24e141e01a676f977032f5a29d81c9e27e # v5
+        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v5
         with:
           distribution: ${{ inputs.force_java_implementation == 'ffm' && 'oracle' || 'temurin' }}
           java-version: |
@@ -129,7 +129,7 @@ jobs:
           echo "CC=cl.exe" >> $GITHUB_ENV
 
       - name: Get HDF5 sources
-        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Setup jextract (FFM builds only)
         if: ${{ inputs.force_java_implementation == 'ffm' }}
@@ -138,6 +138,10 @@ jobs:
           java-version: '25'
 
       # For Windows, use vcpkg toolchain file to allow find_package() calls to resolve
+      # NOTE: VCPKG_USE_LEGACY_APPLOCAL is a temporary fix for an issue with vcpkg
+      # (https://github.com/microsoft/vcpkg-tool/issues/2076) that causes a race in
+      # CI which fails Windows ROS3 builds. This should be removed once the issue is
+      # resolved.
       - name: "Configure (vcpkg; ROS3 testing: ${{ matrix.test_ros3 }})"
         if: ${{ matrix.os_name == 'Windows MSVC' }}
         run: |
@@ -146,6 +150,7 @@ jobs:
           cmake -C $GITHUB_WORKSPACE/config/cmake/cacheinit.cmake \
             --log-level=VERBOSE \
             -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake \
+            -DVCPKG_USE_LEGACY_APPLOCAL=ON \
             -DCMAKE_BUILD_TYPE=${{ inputs.build_mode }} \
             -DBUILD_SHARED_LIBS=ON \
             -DHDF5_ENABLE_ALL_WARNINGS=ON \
@@ -155,8 +160,6 @@ jobs:
             -DHDF5_BUILD_CPP_LIB:BOOL=ON \
             -DHDF5_ENABLE_ZLIB_SUPPORT:BOOL=ON \
             -DHDF5_ENABLE_SZIP_SUPPORT:BOOL=ON \
-            -DHDF5_ENABLE_SZIP_ENCODING:BOOL=ON \
-            -DHDF5_ENABLE_PLUGIN_SUPPORT:BOOL=ON \
             -DLIBAEC_USE_LOCALCONTENT=OFF \
             -DZLIB_USE_LOCALCONTENT=OFF \
             -DHDF5_ENABLE_ROS3_VFD:BOOL=ON \
@@ -182,8 +185,6 @@ jobs:
             -DHDF5_BUILD_CPP_LIB:BOOL=ON \
             -DHDF5_ENABLE_ZLIB_SUPPORT:BOOL=ON \
             -DHDF5_ENABLE_SZIP_SUPPORT:BOOL=ON \
-            -DHDF5_ENABLE_SZIP_ENCODING:BOOL=ON \
-            -DHDF5_ENABLE_PLUGIN_SUPPORT:BOOL=ON \
             -DLIBAEC_USE_LOCALCONTENT=OFF \
             -DZLIB_USE_LOCALCONTENT=OFF \
             -DHDF5_ENABLE_ROS3_VFD:BOOL=ON \
@@ -233,7 +234,7 @@ jobs:
       # Linux: Download aws-c-s3 artifact from build-aws-c-s3 workflow
       - name: Install libaws-c-s3 (Ubuntu) (Cached installation)
         if: ${{ matrix.os_name == 'Ubuntu GCC' }}
-        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6.0.0
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: libaws-c-s3-${{ inputs.build_mode }}
 
@@ -266,7 +267,7 @@ jobs:
 
       - name: Set up Java (if specified or FFM required)
         if: inputs.java_version != 'auto' || inputs.force_java_implementation == 'ffm'
-        uses: actions/setup-java@f2beeb24e141e01a676f977032f5a29d81c9e27e # v5
+        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v5
         with:
           distribution: ${{ inputs.force_java_implementation == 'ffm' && 'oracle' || 'temurin' }}
           java-version: |
@@ -291,7 +292,7 @@ jobs:
           echo "CC=cl.exe" >> $GITHUB_ENV
 
       - name: Get HDF5 sources
-        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Setup jextract (FFM builds only)
         if: ${{ inputs.force_java_implementation == 'ffm' }}
@@ -300,6 +301,10 @@ jobs:
           java-version: '25'
 
       # For Windows, use vcpkg toolchain file to allow find_package() calls to resolve
+      # NOTE: VCPKG_USE_LEGACY_APPLOCAL is a temporary fix for an issue with vcpkg
+      # (https://github.com/microsoft/vcpkg-tool/issues/2076) that causes a race in
+      # CI which fails Windows ROS3 builds. This should be removed once the issue is
+      # resolved.
       - name: "Configure (vcpkg; ROS3 testing: ${{ matrix.test_ros3 }})"
         if: ${{ matrix.os_name == 'Windows MSVC' }}
         run: |
@@ -308,6 +313,7 @@ jobs:
           cmake -C $GITHUB_WORKSPACE/config/cmake/cacheinit.cmake \
             --log-level=VERBOSE \
             -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake \
+            -DVCPKG_USE_LEGACY_APPLOCAL=ON \
             -DCMAKE_BUILD_TYPE=${{ inputs.build_mode }} \
             -DBUILD_SHARED_LIBS=ON \
             -DHDF5_ENABLE_ALL_WARNINGS=ON \
@@ -317,8 +323,6 @@ jobs:
             -DHDF5_BUILD_CPP_LIB:BOOL=ON \
             -DHDF5_ENABLE_ZLIB_SUPPORT:BOOL=ON \
             -DHDF5_ENABLE_SZIP_SUPPORT:BOOL=ON \
-            -DHDF5_ENABLE_SZIP_ENCODING:BOOL=ON \
-            -DHDF5_ENABLE_PLUGIN_SUPPORT:BOOL=ON \
             -DLIBAEC_USE_LOCALCONTENT=OFF \
             -DZLIB_USE_LOCALCONTENT=OFF \
             -DHDF5_ENABLE_ROS3_VFD:BOOL=ON \
@@ -344,8 +348,6 @@ jobs:
             -DHDF5_BUILD_CPP_LIB:BOOL=ON \
             -DHDF5_ENABLE_ZLIB_SUPPORT:BOOL=ON \
             -DHDF5_ENABLE_SZIP_SUPPORT:BOOL=ON \
-            -DHDF5_ENABLE_SZIP_ENCODING:BOOL=ON \
-            -DHDF5_ENABLE_PLUGIN_SUPPORT:BOOL=ON \
             -DLIBAEC_USE_LOCALCONTENT=OFF \
             -DZLIB_USE_LOCALCONTENT=OFF \
             -DHDF5_ENABLE_ROS3_VFD:BOOL=ON \
@@ -376,15 +378,15 @@ jobs:
 
       # Save files created by CTest script
       - name: Save published binary (Windows)
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v5
         with:
-              name: zip-vs2022_cl-S3-${{ inputs.build_mode }}-${{ inputs.save_binary }}-binary
+              name: zip-vs2026_cl-S3-${{ inputs.build_mode }}-${{ inputs.save_binary }}-binary
               path: ${{ runner.workspace }}/build/HDF5-*-win64.zip
               if-no-files-found: error # 'warn' or 'ignore' are also available, defaults to `warn`
         if:  ${{ (matrix.ostype == 'windows') && ( inputs.save_binary != 'skip') }}
 
       - name: Save published binary (linux)
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v5
         with:
               name: tgz-ubuntu-2404_gcc-S3-${{ inputs.build_mode }}-${{ inputs.save_binary }}-binary
               path: ${{ runner.workspace }}/build/HDF5-*-Linux.tar.gz
@@ -392,9 +394,9 @@ jobs:
         if:  ${{ (matrix.ostype == 'ubuntu') && ( inputs.save_binary != 'skip') }}
 
       - name: Save published binary (Mac_latest)
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v5
         with:
-              name: tgz-macos14_clang-S3-${{ inputs.build_mode }}-${{ inputs.save_binary }}-binary
+              name: tgz-macos15_clang-S3-${{ inputs.build_mode }}-${{ inputs.save_binary }}-binary
               path: ${{ runner.workspace }}/build/HDF5-*-Darwin.tar.gz
               if-no-files-found: error # 'warn' or 'ignore' are also available, defaults to `warn`
         if: ${{ (matrix.ostype == 'macos') && ( inputs.save_binary != 'skip') }}

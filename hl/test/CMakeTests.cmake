@@ -65,14 +65,19 @@ set (test_hl_CLEANFILES
     test_ds8.h5
     test_ds9.h5
     test_ds10.h5
+    test_ds_class_prefix.h5
+    test_ds_reserved_prefix.h5
+    test_ds_id_leak.h5
     test_image1.h5
     test_image2.h5
     test_image3.h5
+    test_image_class_prefix.h5
     test_lite1.h5
     test_lite2.h5
     test_lite3.h5
     test_lite4.h5
     test_packet_compress.h5
+    test_boundary.h5
     test_packet_table.h5
     test_packet_table_vlen.h5
     testfl_packet_table_vlen.h5
@@ -133,7 +138,7 @@ macro (HL_ADD_TEST hl_name)
   endif ()
   set_tests_properties (${current_test_name} PROPERTIES
       FIXTURES_REQUIRED clear_test_hl
-      ENVIRONMENT "srcdir=${HDF5_HL_TEST_BINARY_DIR};${CROSSCOMPILING_PATH}"
+      ENVIRONMENT "srcdir=${HDF5_HL_TEST_BINARY_DIR}"
       WORKING_DIRECTORY ${HDF5_HL_TEST_BINARY_DIR}
   )
   if ("HL_${hl_name}" MATCHES "${HDF5_DISABLE_TESTS_REGEX}")

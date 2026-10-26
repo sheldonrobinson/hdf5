@@ -133,7 +133,7 @@ import org.slf4j.LoggerFactory;
  * </tr>
  * <tr>
  * <td>void * <br />
- * (i.e., pointer to `Any')</td>
+ * (i.e., pointer to Any)</td>
  * <td>Special -- see @ref HDFARRAY</td>
  * </tr>
  * </table>
@@ -194,11 +194,11 @@ import org.slf4j.LoggerFactory;
  * @endcode
  *
  * <p>
- * where ``void *'' means that the data may be any valid numeric type, and is a contiguous block of bytes that
+ * where "void *" means that the data may be any valid numeric type, and is a contiguous block of bytes that
  * is the data for a multi-dimensional array. The other parameters describe the dimensions, rank, and datatype
  * of the array ondisk (source) and in memory (destination).
  * <p>
- * For Java, this ``ANY'' is a problem, as the type of data must always be declared. Furthermore,
+ * For Java, this "ANY" is a problem, as the type of data must always be declared. Furthermore,
  * multidimensional arrays are definitely <i>not</i> laid out contiguously in memory. It would be infeasible
  * to declare a separate routine for every combination of number type and dimensionality. For that reason, the
  * @ref HDFARRAY <b>HDFArray</b> class is used to discover the type, shape, and
@@ -206,7 +206,7 @@ import org.slf4j.LoggerFactory;
  * static  C order.
  * <p>
  * The upshot is that any Java array of numbers (either primitive or sub-classes of type <b>Number</b>) can be
- * passed as an ``Object'', and the Java API will translate to and from the appropriate packed array of bytes
+ * passed as an "Object", and the Java API will translate to and from the appropriate packed array of bytes
  * needed by the C library. So the function above would be declared:
  *
  * @code
@@ -296,9 +296,11 @@ public class H5 implements java.io.Serializable {
      * <li>LIB_VERSION[1]: The minor version of the library.</li>
      * <li>LIB_VERSION[2]: The release number of the library.</li>
      * </ul>
-     * Make sure to update the versions number when a different library is used.
+     * NOTE: This version is automatically synchronized with H5public.h via the auto-generated
+     *       H5Version class. To update the version, edit src/H5public.h (H5_VERS_MAJOR,
+     *       H5_VERS_MINOR, H5_VERS_RELEASE). Do NOT manually edit the version numbers.
      */
-    public final static int LIB_VERSION[] = {2, 0, 1};
+    public final static int LIB_VERSION[] = {H5Version.MAJOR, H5Version.MINOR, H5Version.RELEASE};
 
     private final static LinkedHashSet<Long> OPEN_IDS = new LinkedHashSet<Long>();
     private static boolean isLibraryLoaded            = false;
@@ -5738,6 +5740,30 @@ public class H5 implements java.io.Serializable {
 
             ArrayList[] arrayData = (ArrayList[])buf;
 
+            // Reject an undersized buffer up front: the native H5Dwrite uses the
+            // selection to decide how many elements to read from the buffer, so
+            // a buffer shorter than the selection would read past the end.
+            long expected_elems = -1;
+            try {
+                if (mem_space_id != HDF5Constants.H5S_ALL)
+                    expected_elems = org.hdfgroup.javahdf5.hdf5_h.H5Sget_select_npoints(mem_space_id);
+                else if (file_space_id != HDF5Constants.H5S_ALL)
+                    expected_elems = org.hdfgroup.javahdf5.hdf5_h.H5Sget_select_npoints(file_space_id);
+                else {
+                    long all_space = org.hdfgroup.javahdf5.hdf5_h.H5Dget_space(dataset_id);
+                    if (all_space >= 0) {
+                        expected_elems = org.hdfgroup.javahdf5.hdf5_h.H5Sget_simple_extent_npoints(all_space);
+                        org.hdfgroup.javahdf5.hdf5_h.H5Sclose(all_space);
+                    }
+                }
+            }
+            catch (Exception e) {
+                expected_elems = -1;
+            }
+            if (expected_elems >= 0 && buf.length < expected_elems)
+                throw new IllegalArgumentException("H5DwriteVL: data buffer has " + buf.length +
+                                                   " elements but the selection requires " + expected_elems);
+
             // Check the datatype class to determine conversion strategy
             int typeClass = H5Tget_class(mem_type_id);
 
@@ -5760,8 +5786,10 @@ public class H5 implements java.io.Serializable {
                                                                     file_space_id, xfer_plist_id, stringArray);
             }
             else {
-                // For VL datatypes, convert to hvl_t structures
-                hvlArray = VLDataConverter.convertToHVL(arrayData, arena);
+                // For VL datatypes, convert to hvl_t structures. convertToHVLAuto uses
+                // mem_type_id so a VLEN whose base type is a compound is packed in the
+                // native HDF5 layout instead of being misread as a nested VLEN.
+                hvlArray = VLDataConverter.convertToHVLAuto(arrayData, mem_type_id, arena);
                 status   = org.hdfgroup.javahdf5.hdf5_h.H5Dwrite(dataset_id, mem_type_id, mem_space_id,
                                                                  file_space_id, xfer_plist_id, hvlArray);
             }

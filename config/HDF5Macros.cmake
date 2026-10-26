@@ -29,7 +29,8 @@
 macro (H5_SET_LIB_OPTIONS libtarget libname libtype libpackage)
   set (LIB_OUT_NAME "${libname}")
   # SOVERSION passed in ARGN when shared
-  if (${libtype} MATCHES "SHARED")
+  # No versioning for Java JNI libraries
+  if (${libtype} MATCHES "SHARED" AND NOT ${libpackage} STREQUAL "JAVA")
     set (PACKAGE_SOVERSION ${HDF5_${libpackage}_PACKAGE_SOVERSION})
     set (PACKAGE_COMPATIBILITY ${H5_${libpackage}_SOVERS_INTERFACE}.0.0)
     set (PACKAGE_CURRENT ${H5_${libpackage}_SOVERS_INTERFACE}.${H5_${libpackage}_SOVERS_MINOR}.0)
@@ -137,6 +138,33 @@ macro (H5_CREATE_VFD_DIR)
   foreach (vfdtest ${VFD_LIST})
     file (MAKE_DIRECTORY "${PROJECT_BINARY_DIR}/${vfdtest}")
   endforeach ()
+endmacro ()
+
+# H5_SET_LANG_SETTINGS: Macro to set the Fortran and C++ values reported in
+#    libhdf5.settings and H5build_settings. Values are left empty or NO when
+#    that language's library is not built. Call it right before configuring
+#    either file, since the compiler variables are only set once the language
+#    is enabled.
+macro (H5_SET_LANG_SETTINGS)
+  set (H5_FORTRAN_COMPILER "")
+  set (H5_FORTRAN_MODULE_DIR "")
+  set (H5_FORTRAN_SHARED_LIB NO)
+  set (H5_FORTRAN_STATIC_LIB NO)
+  if (HDF5_BUILD_FORTRAN)
+    set (H5_FORTRAN_COMPILER "${CMAKE_Fortran_COMPILER} ${CMAKE_Fortran_COMPILER_VERSION}")
+    set (H5_FORTRAN_MODULE_DIR "${CMAKE_Fortran_MODULE_DIRECTORY}")
+    set (H5_FORTRAN_SHARED_LIB ${H5_ENABLE_SHARED_LIB})
+    set (H5_FORTRAN_STATIC_LIB ${H5_ENABLE_STATIC_LIB})
+  endif ()
+
+  set (H5_CPP_COMPILER "")
+  set (H5_CPP_SHARED_LIB NO)
+  set (H5_CPP_STATIC_LIB NO)
+  if (HDF5_BUILD_CPP_LIB)
+    set (H5_CPP_COMPILER "${CMAKE_CXX_COMPILER} ${CMAKE_CXX_COMPILER_VERSION}")
+    set (H5_CPP_SHARED_LIB ${H5_ENABLE_SHARED_LIB})
+    set (H5_CPP_STATIC_LIB ${H5_ENABLE_STATIC_LIB})
+  endif ()
 endmacro ()
 
 # Given the name of a CMake target for an external VOL connector,

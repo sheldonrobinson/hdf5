@@ -28,6 +28,11 @@
 /***********/
 /* Headers */
 /***********/
+/* Disable free lists in this package when concurrency is enabled until free lists are threadsafe */
+#ifdef H5_HAVE_THREADS
+#define H5_NO_FREE_LISTS
+#endif /* H5_HAVE_THREADS */
+
 #include "H5private.h"   /* Generic Functions                        */
 #include "H5Epkg.h"      /* Error handling                           */
 #include "H5FLprivate.h" /* Free lists                               */
@@ -68,22 +73,22 @@ static herr_t H5E__copy_stack_entry(H5E_entry_t *dst_entry, const H5E_entry_t *s
 static herr_t H5E__set_stack_entry(H5E_error2_t *err_entry, const char *file, const char *func, unsigned line,
                                    hid_t cls_id, hid_t maj_id, hid_t min_id, const char *desc, va_list *ap);
 static herr_t H5E__clear_entries(H5E_stack_t *estack, size_t nentries);
-static herr_t H5E__unregister_class(H5E_cls_t *cls, void **request);
+static herr_t H5E__unregister_class(void *cls, void **request);
 static int    H5E__close_msg_cb(void *obj_ptr, hid_t obj_id, void *udata);
 static void   H5E__free_msg(H5E_msg_t *msg);
-static herr_t H5E__close_msg(H5E_msg_t *err, void **request);
-static herr_t H5E__close_stack(H5E_stack_t *err_stack, void **request);
+static herr_t H5E__close_msg(void *err, void **request);
+static herr_t H5E__close_stack(void *err_stack, void **request);
 
 /*********************/
 /* Package Variables */
 /*********************/
 
-#ifndef H5_HAVE_THREADSAFE_API
+#ifndef H5_HAVE_THREADS
 /*
  * The current error stack.
  */
 H5E_stack_t H5E_stack_g[1];
-#endif /* H5_HAVE_THREADSAFE_API */
+#endif /* H5_HAVE_THREADS */
 
 /* Declare a free list to manage the H5E_stack_t struct */
 H5FL_DEFINE(H5E_stack_t);
@@ -152,14 +157,12 @@ static const H5E_stack_t H5E_err_stack_def = {
 /* H5E_auto_op_t */
 #ifndef H5_NO_DEPRECATED_SYMBOLS
 #ifdef H5_USE_16_API_DEFAULT
-    {1, true, (H5E_auto1_t)H5Eprint1, (H5E_auto2_t)H5E__print2, (H5E_auto1_t)H5Eprint1,
-     (H5E_auto2_t)H5E__print2},
+    {1, true, (H5E_auto1_t)H5Eprint1, H5E__print2, (H5E_auto1_t)H5Eprint1, H5E__print2},
 #else  /* H5_USE_16_API */
-    {2, true, (H5E_auto1_t)H5Eprint1, (H5E_auto2_t)H5E__print2, (H5E_auto1_t)H5Eprint1,
-     (H5E_auto2_t)H5E__print2},
+    {2, true, (H5E_auto1_t)H5Eprint1, H5E__print2, (H5E_auto1_t)H5Eprint1, H5E__print2},
 #endif /* H5_USE_16_API_DEFAULT */
 #else  /* H5_NO_DEPRECATED_SYMBOLS */
-    {(H5E_auto2_t)H5E__print2},
+    {H5E__print2},
 #endif /* H5_NO_DEPRECATED_SYMBOLS */
 
     NULL, /* auto_data */
@@ -174,26 +177,26 @@ hid_t H5E_last_min_id_g  = H5I_INVALID_HID;
 
 /* Error class ID class */
 static const H5I_class_t H5I_ERRCLS_CLS[1] = {{
-    H5I_ERROR_CLASS,                  /* ID class value */
-    0,                                /* Class flags */
-    0,                                /* # of reserved IDs for class */
-    (H5I_free_t)H5E__unregister_class /* Callback routine for closing objects of this class */
+    H5I_ERROR_CLASS,      /* ID class value */
+    0,                    /* Class flags */
+    0,                    /* # of reserved IDs for class */
+    H5E__unregister_class /* Callback routine for closing objects of this class */
 }};
 
 /* Error message ID class */
 static const H5I_class_t H5I_ERRMSG_CLS[1] = {{
-    H5I_ERROR_MSG,             /* ID class value */
-    0,                         /* Class flags */
-    0,                         /* # of reserved IDs for class */
-    (H5I_free_t)H5E__close_msg /* Callback routine for closing objects of this class */
+    H5I_ERROR_MSG, /* ID class value */
+    0,             /* Class flags */
+    0,             /* # of reserved IDs for class */
+    H5E__close_msg /* Callback routine for closing objects of this class */
 }};
 
 /* Error stack ID class */
 static const H5I_class_t H5I_ERRSTK_CLS[1] = {{
-    H5I_ERROR_STACK,             /* ID class value */
-    0,                           /* Class flags */
-    0,                           /* # of reserved IDs for class */
-    (H5I_free_t)H5E__close_stack /* Callback routine for closing objects of this class */
+    H5I_ERROR_STACK, /* ID class value */
+    0,               /* Class flags */
+    0,               /* # of reserved IDs for class */
+    H5E__close_stack /* Callback routine for closing objects of this class */
 }};
 
 /* Library's error class */
@@ -257,9 +260,9 @@ H5E__init_package(void)
     if (H5I_register_type(H5I_ERRSTK_CLS) < 0)
         HGOTO_ERROR(H5E_ID, H5E_CANTINIT, FAIL, "unable to initialize ID group");
 
-#ifndef H5_HAVE_THREADSAFE_API
+#ifndef H5_HAVE_THREADS
     H5E__set_default_auto(H5E_stack_g);
-#endif /* H5_HAVE_THREADSAFE_API */
+#endif /* H5_HAVE_THREADS */
 
     /* Register the HDF5 error class */
     if ((H5E_ERR_CLS_g = H5I_register(H5I_ERROR_CLASS, &H5E_err_cls_s, false)) < 0)
@@ -519,21 +522,22 @@ done:
  *-------------------------------------------------------------------------
  */
 static herr_t
-H5E__unregister_class(H5E_cls_t *cls, void H5_ATTR_UNUSED **request)
+H5E__unregister_class(void *cls, void H5_ATTR_UNUSED **request)
 {
-    herr_t ret_value = SUCCEED; /* Return value */
+    H5E_cls_t *cls_p     = (H5E_cls_t *)cls;
+    herr_t     ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_PACKAGE
 
     /* Check arguments */
-    assert(cls);
+    assert(cls_p);
 
     /* Iterate over all the messages and delete those in this error class */
-    if (H5I_iterate(H5I_ERROR_MSG, H5E__close_msg_cb, cls, false) < 0)
+    if (H5I_iterate(H5I_ERROR_MSG, H5E__close_msg_cb, cls_p, false) < 0)
         HGOTO_ERROR(H5E_ERROR, H5E_BADITER, FAIL, "unable to free all messages in this error class");
 
     /* Free error class structure */
-    if (H5E__free_class(cls) < 0)
+    if (H5E__free_class(cls_p) < 0)
         HGOTO_ERROR(H5E_ERROR, H5E_CANTRELEASE, FAIL, "unable to free error class");
 
 done:
@@ -644,17 +648,19 @@ H5E__free_msg(H5E_msg_t *msg)
  *-------------------------------------------------------------------------
  */
 static herr_t
-H5E__close_msg(H5E_msg_t *err, void H5_ATTR_UNUSED **request)
+H5E__close_msg(void *err, void H5_ATTR_UNUSED **request)
 {
+    H5E_msg_t *err_p = (H5E_msg_t *)err;
+
     FUNC_ENTER_PACKAGE_NOERR
 
     /* Check arguments */
-    assert(err);
+    assert(err_p);
 
     /* Free resources, if application registered this message */
-    if (err->app_msg)
+    if (err_p->app_msg)
         /* Free message */
-        H5E__free_msg(err);
+        H5E__free_msg(err_p);
 
     FUNC_LEAVE_NOAPI(SUCCEED)
 } /* end H5E__close_msg() */
@@ -804,18 +810,20 @@ done:
  *-------------------------------------------------------------------------
  */
 static herr_t
-H5E__close_stack(H5E_stack_t *estack, void H5_ATTR_UNUSED **request)
+H5E__close_stack(void *estack, void H5_ATTR_UNUSED **request)
 {
+    H5E_stack_t *estack_p = (H5E_stack_t *)estack;
+
     FUNC_ENTER_PACKAGE_NOERR
 
     /* Sanity check */
-    assert(estack);
+    assert(estack_p);
 
     /* Release the stack's error information */
-    H5E__destroy_stack(estack);
+    H5E__destroy_stack(estack_p);
 
     /* Free the stack structure */
-    estack = H5FL_FREE(H5E_stack_t, estack);
+    estack_p = H5FL_FREE(H5E_stack_t, estack_p);
 
     FUNC_LEAVE_NOAPI(SUCCEED)
 } /* end H5E__close_stack() */
@@ -850,9 +858,10 @@ H5E__get_num(const H5E_stack_t *estack)
  *-------------------------------------------------------------------------
  */
 herr_t
-H5E__print2(hid_t err_stack, FILE *stream)
+H5E__print2(hid_t err_stack, void *_stream)
 {
-    H5E_stack_t *estack;              /* Error stack to operate on */
+    H5E_stack_t *estack; /* Error stack to operate on */
+    FILE        *stream    = (FILE *)_stream;
     herr_t       ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_PACKAGE
@@ -1590,20 +1599,22 @@ done:
  *              MIN_ID, the name of a function where the error was detected,
  *              the name of the file where the error was detected, the
  *              line within that file, and an error description string.  The
- *              function name, file name, and error description strings must
- *              be statically allocated (the FUNC_ENTER() macro takes care of
- *              the function name and file name automatically, but the
- *              programmer is responsible for the description string).
+ *              error description string must be statically allocated (the
+ *              FUNC_ENTER() macro takes care of the function name and file
+ *              name automatically, but the programmer is responsible for
+ *              the description string).
  *
- * Return:      SUCCEED/FAIL
+ * Return:      true if an error stack entry was pushed
+ *              false if an error stack entry was not pushed
+ *              FAIL on failure
  *
  *-------------------------------------------------------------------------
  */
-herr_t
+htri_t
 H5E__push_stack(H5E_stack_t *estack, bool app_entry, const char *file, const char *func, unsigned line,
                 hid_t cls_id, hid_t maj_id, hid_t min_id, const char *fmt, va_list *ap)
 {
-    herr_t ret_value = SUCCEED; /* Return value */
+    htri_t ret_value = true;
 
     /*
      * WARNING: We cannot call HERROR() from within this function or else we
@@ -1629,6 +1640,8 @@ H5E__push_stack(H5E_stack_t *estack, bool app_entry, const char *file, const cha
             HGOTO_DONE(FAIL);
         estack->nused++;
     } /* end if */
+    else
+        HGOTO_DONE(false);
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)

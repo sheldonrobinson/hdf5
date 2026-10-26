@@ -84,7 +84,7 @@ static herr_t H5D__build_file_prefix(const H5D_t *dset, H5F_prefix_open_t prefix
 static herr_t H5D__open_oid(H5D_t *dataset, hid_t dapl_id);
 static herr_t H5D__init_storage(H5D_t *dset, bool full_overwrite, hsize_t old_dim[]);
 static herr_t H5D__append_flush_setup(H5D_t *dset, hid_t dapl_id);
-static herr_t H5D__close_cb(H5VL_object_t *dset_vol_obj, void **request);
+static herr_t H5D__close_cb(void *dset_vol_obj, void **request);
 static herr_t H5D__use_minimized_dset_headers(H5F_t *file, bool *minimize);
 static herr_t H5D__prepare_minimized_oh(H5F_t *file, H5D_t *dset, H5O_loc_t *oloc);
 static size_t H5D__calculate_minimum_header_size(H5F_t *file, H5D_t *dset, H5O_t *ohdr);
@@ -133,10 +133,10 @@ H5_WARN_LARGE_STACK_OBJECTS_ON
 
 /* Dataset ID class */
 static const H5I_class_t H5I_DATASET_CLS[1] = {{
-    H5I_DATASET,              /* ID class value */
-    0,                        /* Class flags */
-    0,                        /* # of reserved IDs for class */
-    (H5I_free_t)H5D__close_cb /* Callback routine for closing objects of this class */
+    H5I_DATASET,  /* ID class value */
+    0,            /* Class flags */
+    0,            /* # of reserved IDs for class */
+    H5D__close_cb /* Callback routine for closing objects of this class */
 }};
 
 /* Flag indicating "top" of interface has been initialized */
@@ -332,22 +332,23 @@ H5D_term_package(void)
  *-------------------------------------------------------------------------
  */
 static herr_t
-H5D__close_cb(H5VL_object_t *dset_vol_obj, void **request)
+H5D__close_cb(void *dset_vol_obj, void **request)
 {
-    herr_t ret_value = SUCCEED; /* Return value */
+    H5VL_object_t *dset_vol_obj_p = (H5VL_object_t *)dset_vol_obj;
+    herr_t         ret_value      = SUCCEED; /* Return value */
 
     FUNC_ENTER_PACKAGE
 
     /* Sanity check */
-    assert(dset_vol_obj);
+    assert(dset_vol_obj_p);
 
     /* Close the dataset */
-    if (H5VL_dataset_close(dset_vol_obj, H5P_DATASET_XFER_DEFAULT, request) < 0)
+    if (H5VL_dataset_close(dset_vol_obj_p, H5P_DATASET_XFER_DEFAULT, request) < 0)
         HGOTO_ERROR(H5E_DATASET, H5E_CLOSEERROR, FAIL, "unable to close dataset");
 
 done:
     /* Free the VOL object */
-    if (H5VL_free_object(dset_vol_obj) < 0)
+    if (H5VL_free_object(dset_vol_obj_p) < 0)
         HGOTO_ERROR(H5E_DATASET, H5E_CANTDEC, FAIL, "unable to free VOL object");
 
     FUNC_LEAVE_NOAPI(ret_value)
@@ -829,8 +830,8 @@ H5D__calculate_minimum_header_size(H5F_t *file, H5D_t *dset, H5O_t *ohdr)
 
         if (H5O_OH_GET_VERSION(ohdr) == 1) {
             /* v1 object headers store modification time as a message */
-            time_t mtime;
-            get_value = H5O_msg_size_oh(file, ohdr, H5O_MTIME_NEW_ID, &mtime, 0);
+            time_t mtime = 0;
+            get_value    = H5O_msg_size_oh(file, ohdr, H5O_MTIME_NEW_ID, &mtime, 0);
             if (get_value == 0)
                 HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, 0, "can't get size of modification time message");
             ret_value += get_value;
@@ -1265,7 +1266,7 @@ H5D__create(H5F_t *file, hid_t type_id, const H5S_t *space, hid_t dcpl_id, hid_t
         H5O_efl_t    *efl;                    /* Dataset's external file list info */
         htri_t        ignore_filters = false; /* Ignore optional filters or not */
 
-        if ((ignore_filters = H5Z_ignore_filters(new_dset->shared->dcpl_id, dt, space)) < 0)
+        if ((ignore_filters = H5Z_ignore_filters(new_dset->shared->dcpl_id, space)) < 0)
             HGOTO_ERROR(H5E_ARGS, H5E_CANTINIT, NULL, "H5Z_has_optional_filter() failed");
 
         if (false == ignore_filters) {
@@ -1326,19 +1327,6 @@ H5D__create(H5F_t *file, hid_t type_id, const H5S_t *space, hid_t dcpl_id, hid_t
     if (H5O_fill_set_version(file, &new_dset->shared->dcpl_cache.fill) < 0)
         HGOTO_ERROR(H5E_DATASET, H5E_CANTSET, NULL, "can't set latest version of fill value");
 
-    /* Check if the file driver would like to force early space allocation */
-    if (H5F_HAS_FEATURE(file, H5FD_FEAT_ALLOCATE_EARLY))
-        new_dset->shared->dcpl_cache.fill.alloc_time = H5D_ALLOC_TIME_EARLY;
-
-    /*
-     * Check if this dataset is going into a parallel file and set space allocation time.
-     * If the dataset has filters applied to it, writes to the dataset must be collective,
-     * so we don't need to force early space allocation. Otherwise, we force early space
-     * allocation to facilitate independent raw data operations.
-     */
-    if (H5F_HAS_FEATURE(file, H5FD_FEAT_HAS_MPI) && (new_dset->shared->dcpl_cache.pline.nused == 0))
-        new_dset->shared->dcpl_cache.fill.alloc_time = H5D_ALLOC_TIME_EARLY;
-
     /* Set the dataset's I/O operations */
     if (H5D__layout_set_io_ops(new_dset) < 0)
         HGOTO_ERROR(H5E_DATASET, H5E_CANTINIT, NULL, "unable to initialize I/O operations");
@@ -1351,6 +1339,19 @@ H5D__create(H5F_t *file, hid_t type_id, const H5S_t *space, hid_t dcpl_id, hid_t
     /* Check if the layout version is above the high bound for the file */
     if (new_dset->shared->layout.version > H5O_layout_ver_bounds[H5F_HIGH_BOUND(file)])
         HGOTO_ERROR(H5E_DATASET, H5E_BADRANGE, NULL, "layout version out of bounds");
+
+    /* Check if the file driver would like to force early space allocation */
+    if (H5F_HAS_FEATURE(file, H5FD_FEAT_ALLOCATE_EARLY))
+        new_dset->shared->dcpl_cache.fill.alloc_time = H5D_ALLOC_TIME_EARLY;
+
+    /*
+     * Check if this dataset is going into a parallel file and set space allocation time.
+     * If the dataset has filters applied to it, writes to the dataset must be collective,
+     * so we don't need to force early space allocation. Otherwise, we force early space
+     * allocation to facilitate independent raw data operations.
+     */
+    if (H5F_HAS_FEATURE(file, H5FD_FEAT_HAS_MPI) && (new_dset->shared->dcpl_cache.pline.nused == 0))
+        new_dset->shared->dcpl_cache.fill.alloc_time = H5D_ALLOC_TIME_EARLY;
 
     /* Update the dataset's object header info. */
     if (H5D__update_oh_info(file, new_dset, new_dset->shared->dapl_id) < 0)
@@ -1962,13 +1963,15 @@ H5D_close(H5D_t *dataset)
          */
         dataset->shared->closing = true;
 
+        /* Free the data sieve buffer, if it's been allocated */
+        if (dataset->shared->cache.sieve.sieve_buf)
+            dataset->shared->cache.sieve.sieve_buf =
+                (unsigned char *)H5FL_BLK_FREE(sieve_buf, dataset->shared->cache.sieve.sieve_buf);
+
         /* Free cached information for each kind of dataset */
         switch (dataset->shared->layout.type) {
             case H5D_CONTIGUOUS:
-                /* Free the data sieve buffer, if it's been allocated */
-                if (dataset->shared->cache.contig.sieve_buf)
-                    dataset->shared->cache.contig.sieve_buf =
-                        (unsigned char *)H5FL_BLK_FREE(sieve_buf, dataset->shared->cache.contig.sieve_buf);
+                /* Nothing special to do */
                 break;
 
             case H5D_CHUNKED:
@@ -1991,6 +1994,7 @@ H5D_close(H5D_t *dataset)
                         H5FL_FREE(H5D_piece_info_t, dataset->shared->cache.chunk.single_piece_info);
                     dataset->shared->cache.chunk.single_piece_info = NULL;
                 } /* end if */
+
                 break;
 
             case H5D_COMPACT:
@@ -2156,15 +2160,13 @@ H5D_mult_refresh_close(hid_t dset_id)
     assert(dataset->shared->fo_count > 0);
 
     if (dataset->shared->fo_count > 1) {
+        /* Free the data sieve buffer, if it's been allocated */
+        if (dataset->shared->cache.sieve.sieve_buf)
+            dataset->shared->cache.sieve.sieve_buf =
+                (unsigned char *)H5FL_BLK_FREE(sieve_buf, dataset->shared->cache.sieve.sieve_buf);
+
         /* Free cached information for each kind of dataset */
         switch (dataset->shared->layout.type) {
-            case H5D_CONTIGUOUS:
-                /* Free the data sieve buffer, if it's been allocated */
-                if (dataset->shared->cache.contig.sieve_buf)
-                    dataset->shared->cache.contig.sieve_buf =
-                        (unsigned char *)H5FL_BLK_FREE(sieve_buf, dataset->shared->cache.contig.sieve_buf);
-                break;
-
             case H5D_CHUNKED:
                 /* Check for skip list for iterating over chunks during I/O to close */
                 if (dataset->shared->cache.chunk.sel_chunks) {
@@ -2187,6 +2189,7 @@ H5D_mult_refresh_close(hid_t dset_id)
                 } /* end if */
                 break;
 
+            case H5D_CONTIGUOUS:
             case H5D_COMPACT:
             case H5D_VIRTUAL:
                 /* Nothing special to do (info freed in the layout destroy) */
@@ -3250,18 +3253,18 @@ H5D__flush_sieve_buf(H5D_t *dataset)
     assert(dataset);
 
     /* Flush the raw data buffer, if we have a dirty one */
-    if (dataset->shared->cache.contig.sieve_buf && dataset->shared->cache.contig.sieve_dirty) {
+    if (dataset->shared->cache.sieve.sieve_buf && dataset->shared->cache.sieve.sieve_dirty) {
         assert(dataset->shared->layout.type !=
                H5D_COMPACT); /* We should never have a sieve buffer for compact storage */
 
         /* Write dirty data sieve buffer to file */
         if (H5F_shared_block_write(
-                H5F_SHARED(dataset->oloc.file), H5FD_MEM_DRAW, dataset->shared->cache.contig.sieve_loc,
-                dataset->shared->cache.contig.sieve_size, dataset->shared->cache.contig.sieve_buf) < 0)
+                H5F_SHARED(dataset->oloc.file), H5FD_MEM_DRAW, dataset->shared->cache.sieve.sieve_loc,
+                dataset->shared->cache.sieve.sieve_size, dataset->shared->cache.sieve.sieve_buf) < 0)
             HGOTO_ERROR(H5E_IO, H5E_WRITEERROR, FAIL, "block write failed");
 
         /* Reset sieve buffer dirty flag */
-        dataset->shared->cache.contig.sieve_dirty = false;
+        dataset->shared->cache.sieve.sieve_dirty = false;
     } /* end if */
 
 done:

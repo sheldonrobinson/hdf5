@@ -21,17 +21,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Get Sources (Linux)
-        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Install Dependencies (Linux)
         shell: bash
         run: |
            sudo apt-get update
-           sudo apt-get install ninja-build doxygen graphviz
+           sudo apt-get install ninja-build graphviz
            sudo apt install libssl3 libssl-dev libcurl4 libcurl4-openssl-dev
 
       - name: Install oneAPI (Linux)
-        uses: fortran-lang/setup-fortran@47809fdb6e637da656ce9ada436527b240c1287f # v1
+        uses: fortran-lang/setup-fortran@be037f0a45b1160f139d4ccd0b96f9e9bfd6a682 # v1
         id: setup-fortran
         with:
           compiler: intel
@@ -71,20 +71,26 @@ jobs:
 
   Intel_oneapi_windows:
     name: "windows-oneapi ${{ inputs.build_mode }}"
-    runs-on: windows-latest
+    runs-on: windows-2022
     steps:
       - name: Get Sources (Windows)
-        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Install Dependencies (Windows)
         run: choco install ninja
 
       - name: install oneAPI (Windows)
-        uses: fortran-lang/setup-fortran@47809fdb6e637da656ce9ada436527b240c1287f # v1
+        uses: fortran-lang/setup-fortran@be037f0a45b1160f139d4ccd0b96f9e9bfd6a682 # v1
         id: setup-fortran
         with:
           compiler: intel
           version: '2025.2'
+
+      - name: Setup Java
+        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          java-version: 11
+          distribution: 'temurin'
 
       - name: Configure (Windows)
         shell: pwsh
